@@ -6,8 +6,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EventModal } from "./event-modal";
+import { AnalysisModal } from "./analysis-modal";
 import { ColumnDef } from "@tanstack/react-table";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, FlaskConical } from "lucide-react";
 import { updateMicroEvent } from "@/lib/services/micro-events.service";
 import { useToast } from "@/components/toast";
 
@@ -22,6 +23,7 @@ interface EventsTableProps {
   view?: "operator" | "leader" | "audit";
   onEventUpdate?: (updatedEvent: MicroEvent) => void;
   eventTypeName?: string;
+  eventTypeId?: string;
 }
 
 type EventStatus = "proximo" | "tomar-muestra" | "confirmado" | "expirado" | "pasado";
@@ -125,9 +127,12 @@ export function EventsTable({
   view,
   onEventUpdate,
   eventTypeName,
+  eventTypeId,
 }: EventsTableProps) {
   const [selectedEvent, setSelectedEvent] = useState<MicroEvent | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedAnalysisEvent, setSelectedAnalysisEvent] = useState<MicroEvent | null>(null);
+  const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [updatingSelectors, setUpdatingSelectors] = useState<Set<number>>(new Set());
   const { showSuccess, showError } = useToast();
 
@@ -201,7 +206,7 @@ export function EventsTable({
       id: "estado",
       header: "estado",
       cell: ({ row }) => {
-        const status = getEventStatus(row.original, serverTime);
+        const status = getEventStatus(row.original, serverTime ?? null);
         return (
           <Badge variant={status.variant} className={status.className}>
             {status.label}
@@ -217,7 +222,7 @@ export function EventsTable({
       id: "acciones",
       header: "acciones",
       cell: ({ row }) => {
-        const status = getEventStatus(row.original, serverTime);
+        const status = getEventStatus(row.original, serverTime ?? null);
         const isProximo = status.label === "Próximo";
         
         return (
@@ -233,6 +238,35 @@ export function EventsTable({
           >
             <Eye className="h-4 w-4" />
           </Button>
+        );
+      },
+    });
+  }
+
+  // Agregar columna de cantidad de análisis solo para vista leader
+  if (view === "leader") {
+    columns.push({
+      id: "cantidad-analisis",
+      header: "análisis",
+      cell: ({ row }) => {
+        const event = row.original;
+        const count = event.analysisCount || 0;
+        
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{count}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedAnalysisEvent(event);
+                setAnalysisModalOpen(true);
+              }}
+              title="Ver y gestionar análisis"
+            >
+              <FlaskConical className="h-4 w-4" />
+            </Button>
+          </div>
         );
       },
     });
@@ -295,6 +329,13 @@ export function EventsTable({
     }
   };
 
+  const handleAnalysisModalClose = (open: boolean) => {
+    setAnalysisModalOpen(open);
+    if (!open) {
+      setSelectedAnalysisEvent(null);
+    }
+  };
+
   return (
     <>
       <div className="w-full space-y-4">
@@ -334,6 +375,20 @@ export function EventsTable({
           eventTypeName={eventTypeName}
           serverTime={serverTime}
           view={view}
+        />
+      )}
+
+      {view === "leader" && (
+        <AnalysisModal
+          event={selectedAnalysisEvent ? {
+            ...selectedAnalysisEvent,
+            typeId: selectedAnalysisEvent.typeId || eventTypeId,
+          } : null}
+          open={analysisModalOpen}
+          onOpenChange={handleAnalysisModalClose}
+          onAnalysisCreated={() => {
+            // Opcional: recargar datos si es necesario
+          }}
         />
       )}
     </>

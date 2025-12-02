@@ -6,6 +6,7 @@ export interface MicroEventElement {
 export interface MicroEvent {
   id: number;
   element: MicroEventElement;
+  typeId?: string;
   streamstardate: string;
   value: string;
   samplestart: string;
@@ -22,6 +23,7 @@ export interface MicroEvent {
   week: number;
   selector: boolean;
   delete: boolean;
+  analysisCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,9 +40,13 @@ export interface MicroEventsSearchParams {
 
 export interface MicroEventsSearchResponse {
   data: MicroEvent[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 

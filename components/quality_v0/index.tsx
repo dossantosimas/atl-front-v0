@@ -97,14 +97,14 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
       });
 
       setEvents(response.data);
-      setTotalPages(response.totalPages);
-      setTotal(response.total);
-      setCurrentPage(response.page);
+      setTotalPages(response.pagination.totalPages);
+      setTotal(response.pagination.total);
+      setCurrentPage(response.pagination.page);
       
       if (page === 1) {
         showSuccess(
           "Búsqueda exitosa",
-          `Se encontraron ${response.total} eventos`
+          `Se encontraron ${response.pagination.total} eventos`
         );
       }
     } catch (err) {
@@ -209,6 +209,7 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
           view={view}
           onEventUpdate={handleEventUpdate}
           eventTypeName={getEventTypeName()}
+          eventTypeId={selectedEventType}
         />
       </div>
 
