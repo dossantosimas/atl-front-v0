@@ -222,19 +222,34 @@ export function EventsTable({
       id: "acciones",
       header: "acciones",
       cell: ({ row }) => {
-        const status = getEventStatus(row.original, serverTime ?? null);
+        const event = row.original;
+        const status = getEventStatus(event, serverTime ?? null);
         const isProximo = status.label === "Próximo";
+        
+        // Verificar si es un evento manual (sampleconfirm === streamstardate) - solo para operator
+        const isManual = 
+          view === "operator" &&
+          event.sampleconfirm && 
+          event.streamstardate &&
+          event.sampleconfirm === event.streamstardate;
+        
+        const isDisabled = isProximo || isManual;
+        const disabledTitle = isProximo 
+          ? "No se puede abrir el modal para eventos próximos"
+          : isManual
+          ? "No se puede abrir el modal para eventos manuales"
+          : "";
         
         return (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
-              setSelectedEvent(row.original);
+              setSelectedEvent(event);
               setModalOpen(true);
             }}
-            disabled={isProximo}
-            title={isProximo ? "No se puede abrir el modal para eventos próximos" : ""}
+            disabled={isDisabled}
+            title={disabledTitle}
           >
             <Eye className="h-4 w-4" />
           </Button>
