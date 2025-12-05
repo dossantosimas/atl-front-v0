@@ -77,7 +77,8 @@ export function AnalysisModal({
     const eventTypeId = event.typeId;
     
     if (!eventTypeId) {
-      showError("Error", new Error("No se puede determinar el tipo de evento"));
+      console.error("Event typeId no disponible:", event);
+      // No mostrar toast, el modal mostrará el mensaje de error
       return;
     }
 
@@ -300,11 +301,35 @@ export function AnalysisModal({
     return passes ? "pass" : "fail";
   };
 
-  if (!event || !microType) {
+  if (!event) {
     return null;
   }
 
-  const analysisTypes = microType.analysisTypes || [];
+  if (!microType && !loading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader className="border-b pb-3">
+            <DialogTitle className="text-base font-semibold text-gray-800">
+              Error
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              No se pudo cargar la información del tipo de evento. Por favor, asegúrate de haber seleccionado un tipo de evento antes de buscar.
+            </p>
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" onClick={() => onOpenChange(false)} size="sm">
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const analysisTypes = microType?.analysisTypes || [];
   const modalWidth = "sm:max-w-7xl w-[95vw]";
 
   return (

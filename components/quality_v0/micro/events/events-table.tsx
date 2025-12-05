@@ -275,10 +275,15 @@ export function EventsTable({
               variant="ghost"
               size="sm"
               onClick={() => {
+                if (!eventTypeId) {
+                  showError("Error", new Error("No se puede abrir el modal de análisis sin un tipo de evento seleccionado"));
+                  return;
+                }
                 setSelectedAnalysisEvent(event);
                 setAnalysisModalOpen(true);
               }}
-              title="Ver y gestionar análisis"
+              disabled={!eventTypeId}
+              title={eventTypeId ? "Ver y gestionar análisis" : "Selecciona un tipo de evento primero"}
             >
               <FlaskConical className="h-4 w-4" />
             </Button>
@@ -394,7 +399,7 @@ export function EventsTable({
         />
       )}
 
-      {view === "leader" && (
+      {view === "leader" && eventTypeId && (
         <AnalysisModal
           event={selectedAnalysisEvent ? {
             ...selectedAnalysisEvent,

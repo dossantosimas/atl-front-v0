@@ -21,12 +21,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   loading?: boolean;
+  searchFilter?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   loading = false,
+  searchFilter,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -46,54 +48,62 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="w-full rounded-md border border-border bg-card">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="bg-muted/50">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className="hover:bg-muted/50"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </TableCell>
+    <div className="w-full h-full rounded-md border border-border bg-card overflow-hidden flex flex-col">
+      <div className="flex-1 overflow-auto relative">
+        <table className="w-full caption-bottom text-sm">
+          <thead className="sticky top-0 z-20 bg-muted/95 backdrop-blur-sm [&_tr]:border-b">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="text-foreground h-8 px-2 text-left align-middle font-medium whitespace-nowrap bg-muted/95 backdrop-blur-sm text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </th>
                 ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="h-24 text-center text-muted-foreground"
-              >
-                Sin datos
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+              </tr>
+            ))}
+          </thead>
+          <tbody className="[&_tr:last-child]:border-0">
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="p-1.5 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="h-16 text-center text-muted-foreground p-2 align-middle whitespace-nowrap text-xs"
+                >
+                  {loading ? "Cargando..." : searchFilter ? "No se encontraron resultados" : "Sin datos"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

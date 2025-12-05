@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { MicroSchedule } from "@/lib/types/micro-schedules";
 import { getMicroSchedules } from "@/lib/services/micro-schedules.service";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ColumnDef } from "@tanstack/react-table";
-import { Plus, Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Loader2, Search, X } from "lucide-react";
 import { useToast } from "@/components/toast";
 import { CreateScheduleModal } from "./create-schedule-modal";
 import { EditScheduleModal } from "./edit-schedule-modal";
@@ -17,6 +18,7 @@ import { ViewScheduleModal } from "./view-schedule-modal";
 export function SchedulesTable() {
   const [schedules, setSchedules] = useState<MicroSchedule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchFilter, setSearchFilter] = useState("");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -83,6 +85,17 @@ export function SchedulesTable() {
     setViewModalOpen(false);
     setSelectedSchedule(null);
   };
+
+  // Filtrar schedules por nombre
+  const filteredSchedules = useMemo(() => {
+    if (!searchFilter.trim()) {
+      return schedules;
+    }
+    const filterLower = searchFilter.toLowerCase().trim();
+    return schedules.filter((schedule) =>
+      schedule.name.toLowerCase().includes(filterLower)
+    );
+  }, [schedules, searchFilter]);
 
   const columns: ColumnDef<MicroSchedule>[] = [
     {
@@ -201,16 +214,48 @@ export function SchedulesTable() {
 
   return (
     <>
-      <div className="w-full space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Schedules Programados</h2>
-          <Button onClick={handleCreate} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
+      <div className="w-full h-full flex flex-col min-h-0 overflow-hidden">
+        <div className="flex items-center justify-between mb-2 flex-shrink-0">
+          <h2 className="text-lg font-semibold">Schedules Programados</h2>
+          <Button onClick={handleCreate} size="sm" className="h-8">
+            <Plus className="mr-2 h-3.5 w-3.5" />
             Crear Schedule
           </Button>
         </div>
 
-        <DataTable columns={columns} data={schedules} loading={loading} />
+        <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Filtrar por nombre..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="pl-8 pr-8 h-8 text-sm"
+            />
+            {searchFilter && (
+              <button
+                onClick={() => setSearchFilter("")}
+                className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          {searchFilter && (
+            <span className="text-xs text-muted-foreground">
+              {filteredSchedules.length} de {schedules.length} schedules
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <DataTable 
+            columns={columns} 
+            data={filteredSchedules} 
+            loading={loading}
+            searchFilter={searchFilter}
+          />
+        </div>
       </div>
 
       <CreateScheduleModal

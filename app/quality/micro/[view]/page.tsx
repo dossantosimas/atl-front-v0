@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { QualityV0 } from "@/components/quality_v0";
+import { QualityV0 } from "@/components/quality_v0/micro/events";
 
 const validViews = ["operator", "leader", "audit"] as const;
 
