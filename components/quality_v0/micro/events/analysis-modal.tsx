@@ -406,6 +406,7 @@ export function AnalysisModal({
                           day: "2-digit",
                           hour: "2-digit",
                           minute: "2-digit",
+                          hour12: false, // Formato 24 horas (militar)
                         });
                       } catch {
                         return dateString;

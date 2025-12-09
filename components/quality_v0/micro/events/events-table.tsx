@@ -144,6 +144,7 @@ export function EventsTable({
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false, // Formato 24 horas (militar)
       });
     } catch {
       return dateString;
@@ -171,6 +172,13 @@ export function EventsTable({
       cell: ({ row }) => {
         const element = row.original.element;
         return <div>{element?.name || "-"}</div>;
+      },
+    },
+    {
+      accessorKey: "streamstardate",
+      header: "inicio stream",
+      cell: ({ row }) => {
+        return <div>{formatDate(row.getValue("streamstardate"))}</div>;
       },
     },
     {
