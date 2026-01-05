@@ -12,7 +12,7 @@ export default function SchedulesPage() {
       <main className="h-full w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-4 overflow-hidden">
         <div className="flex flex-col h-full min-h-0 overflow-hidden">
           <div className="mb-3 flex-shrink-0">
-            <h1 className="text-xl font-bold leading-6 tracking-tight text-blue-600 dark:text-blue-400">
+            <h1 className="text-xl font-bold leading-6 tracking-tight text-[#091EB7] dark:text-[#0ADDD7]">
               Schedules Programados
             </h1>
             <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">

@@ -27,15 +27,15 @@ function getPlanningIcon(name: string) {
 function getPlanningColor(name: string) {
   const lowerName = name.toLowerCase();
   if (lowerName.includes("agua") || lowerName.includes("water")) {
-    return { bg: "bg-blue-500", hover: "hover:bg-blue-600" };
+    return { bg: "bg-[#091EB7]", hover: "hover:bg-[#050F5C]" }; // Azul coster / Rio azul
   }
   if (lowerName.includes("co2") || lowerName.includes("carbono")) {
-    return { bg: "bg-gray-500", hover: "hover:bg-gray-600" };
+    return { bg: "bg-[#0ADDD7]", hover: "hover:bg-[#091EB7]" }; // Manantial azul / Azul coster
   }
   if (lowerName.includes("energía") || lowerName.includes("energia") || lowerName.includes("energy")) {
-    return { bg: "bg-yellow-500", hover: "hover:bg-yellow-600" };
+    return { bg: "bg-[#EBA600]", hover: "hover:bg-[#FE941E]" }; // Amarillo canario / Caribeño
   }
-  return { bg: "bg-purple-500", hover: "hover:bg-purple-600" };
+  return { bg: "bg-[#FE941E]", hover: "hover:bg-[#EBA600]" }; // Caribeño / Amarillo canario
 }
 
 export function PlanningCards({ plannings }: PlanningCardsProps) {
@@ -62,13 +62,13 @@ export function PlanningCards({ plannings }: PlanningCardsProps) {
                 <Icon className="h-12 w-12 text-white mx-auto" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-[#091EB7] dark:group-hover:text-[#0ADDD7] transition-colors">
                   {planning.name}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                   Gestión y planeación de {planning.name.toLowerCase()}
                 </p>
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                <div className="flex items-center text-[#091EB7] dark:text-[#0ADDD7] font-medium text-sm">
                   Acceder
                   <svg
                     className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1"

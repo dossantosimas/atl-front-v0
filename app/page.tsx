@@ -27,8 +27,8 @@ export default function Home() {
       description: "Gestión de eventos microbiológicos y control de calidad",
       href: "/quality",
       icon: FlaskConical,
-      color: "bg-blue-500",
-      hoverColor: "hover:bg-blue-600",
+      color: "bg-[#091EB7]",
+      hoverColor: "hover:bg-[#050F5C]",
       enabled: true,
     },
     {
@@ -36,8 +36,8 @@ export default function Home() {
       description: "Planeación y gestión de recursos (Agua, CO2, Energía, Otros)",
       href: "/direction",
       icon: Target,
-      color: "bg-cyan-500",
-      hoverColor: "hover:bg-cyan-600",
+      color: "bg-[#0ADDD7]",
+      hoverColor: "hover:bg-[#091EB7]",
       enabled: true,
     },
     {
@@ -54,8 +54,8 @@ export default function Home() {
       description: "Control de procesos de envasado y embotellado",
       href: "#",
       icon: Package,
-      color: "bg-green-500",
-      hoverColor: "hover:bg-green-600",
+      color: "bg-[#0ADDD7]",
+      hoverColor: "hover:bg-[#091EB7]",
       enabled: false,
     },
     {
@@ -63,8 +63,8 @@ export default function Home() {
       description: "Seguimiento de procesos de producción de cerveza",
       href: "#",
       icon: Factory,
-      color: "bg-purple-500",
-      hoverColor: "hover:bg-purple-600",
+      color: "bg-[#FE941E]",
+      hoverColor: "hover:bg-[#EBA600]",
       enabled: false,
     },
     {
@@ -81,8 +81,8 @@ export default function Home() {
       description: "Administración y gestión empresarial",
       href: "#",
       icon: Briefcase,
-      color: "bg-indigo-500",
-      hoverColor: "hover:bg-indigo-600",
+      color: "bg-[#091EB7]",
+      hoverColor: "hover:bg-[#050F5C]",
       enabled: false,
     },
     {
@@ -125,7 +125,7 @@ export default function Home() {
               <div className="space-y-4">
                 <h2 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl lg:text-6xl">
                   Cervecería del
-                  <span className="block text-blue-600 dark:text-blue-400">
+                  <span className="block text-[#091EB7] dark:text-[#0ADDD7]">
                     Atlántico
                   </span>
                 </h2>
@@ -152,19 +152,19 @@ export default function Home() {
 
               <div className="flex flex-wrap gap-6 pt-4">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-[#0ADDD7]" />
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Gestión Integral
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-[#0ADDD7]" />
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Tiempo Real
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-5 w-5 text-[#0ADDD7]" />
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Trazabilidad
                   </span>
@@ -176,7 +176,7 @@ export default function Home() {
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-2xl">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center space-y-4 p-8">
-                  <Factory className="h-24 w-24 mx-auto text-blue-600 dark:text-blue-400 opacity-50" />
+                      <Factory className="h-24 w-24 mx-auto text-[#091EB7] dark:text-[#0ADDD7] opacity-50" />
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     [Imagen Hero: Instalaciones de Cervecería del Atlántico]
                   </p>
@@ -212,8 +212,8 @@ export default function Home() {
                 <div className="aspect-video w-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600">
                   <div className="flex h-full items-center justify-center p-6">
                     <div className="text-center space-y-2">
-                      <div className="mx-auto h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                        <CheckCircle2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                      <div className="mx-auto h-16 w-16 rounded-full bg-[#F4F3FF] dark:bg-[#050F5C]/30 flex items-center justify-center">
+                        <CheckCircle2 className="h-8 w-8 text-[#091EB7] dark:text-[#0ADDD7]" />
                       </div>
                       <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                         {feature.imagePlaceholder}
@@ -256,13 +256,13 @@ export default function Home() {
               const Icon = gerencia.icon;
               const CardContent = (
                 <div
-                  className={`group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-all ${
+                  className={`group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-all flex flex-col h-full ${
                     gerencia.enabled
                       ? "hover:shadow-2xl hover:-translate-y-1 cursor-pointer"
                       : "opacity-60 cursor-not-allowed"
                   }`}
                 >
-                  <div className={`${gerencia.color} p-6 relative`}>
+                  <div className={`${gerencia.color} p-6 relative flex-shrink-0`}>
                     <Icon className="h-8 w-8 text-white" />
                     {!gerencia.enabled && (
                       <div className="absolute top-2 right-2">
@@ -270,18 +270,18 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     <h3
                       className={`text-xl font-semibold mb-2 transition-colors ${
                         gerencia.enabled
-                          ? "text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                          ? "text-gray-900 dark:text-gray-100 group-hover:text-[#091EB7] dark:group-hover:text-[#0ADDD7]"
                           : "text-gray-500 dark:text-gray-400"
                       }`}
                     >
                       {gerencia.title}
                     </h3>
                     <p
-                      className={`text-sm mb-4 ${
+                      className={`text-sm mb-4 flex-1 ${
                         gerencia.enabled
                           ? "text-gray-600 dark:text-gray-300"
                           : "text-gray-400 dark:text-gray-500"
@@ -290,12 +290,12 @@ export default function Home() {
                       {gerencia.description}
                     </p>
                     {gerencia.enabled ? (
-                      <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                      <div className="flex items-center text-[#091EB7] dark:text-[#0ADDD7] font-medium text-sm mt-auto">
                         Acceder
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </div>
                     ) : (
-                      <div className="flex items-center text-gray-400 dark:text-gray-500 font-medium text-sm">
+                      <div className="flex items-center text-gray-400 dark:text-gray-500 font-medium text-sm mt-auto">
                         Próximamente
                         <Lock className="ml-2 h-4 w-4" />
                       </div>
@@ -349,10 +349,10 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Left Image */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-200 dark:from-indigo-900/20 dark:to-purple-900/20 shadow-xl">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-[#F4F3FF] to-[#0ADDD7]/20 dark:from-[#050F5C]/20 dark:to-[#091EB7]/20 shadow-xl">
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center space-y-4 p-8">
-                  <Factory className="h-20 w-20 mx-auto text-indigo-600 dark:text-indigo-400 opacity-50" />
+                  <Factory className="h-20 w-20 mx-auto text-[#091EB7] dark:text-[#0ADDD7] opacity-50" />
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     [Imagen: Proceso de producción de cerveza]
                   </p>
@@ -381,7 +381,7 @@ export default function Home() {
                   "Gestión integral de todas las gerencias",
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-[#0ADDD7] mt-0.5 flex-shrink-0" />
                     <span className="text-gray-600 dark:text-gray-300">
                       {item}
                     </span>

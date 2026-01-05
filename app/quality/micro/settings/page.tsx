@@ -14,7 +14,7 @@ export default function SettingsPage() {
       <main className="h-full w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-6">
         <div className="flex flex-col gap-4 h-full">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold leading-7 tracking-tight text-blue-600 dark:text-blue-400">
+            <h1 className="text-2xl font-bold leading-7 tracking-tight text-[#091EB7] dark:text-[#0ADDD7]">
               Configuración
             </h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

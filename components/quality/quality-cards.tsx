@@ -20,8 +20,8 @@ const qualityCards: QualityCard[] = [
     description: "Gestión de eventos microbiológicos y análisis",
     href: "/quality/micro",
     icon: Microscope,
-    color: "bg-blue-500",
-    hoverColor: "hover:bg-blue-600",
+    color: "bg-[#091EB7]",
+    hoverColor: "hover:bg-[#050F5C]",
   },
   {
     id: "fisico-quimico",
@@ -29,8 +29,8 @@ const qualityCards: QualityCard[] = [
     description: "Control y análisis físico-químico",
     href: "/quality/fisico-quimico",
     icon: FlaskConical,
-    color: "bg-green-500",
-    hoverColor: "hover:bg-green-600",
+    color: "bg-[#0ADDD7]",
+    hoverColor: "hover:bg-[#091EB7]",
   },
 ];
 
@@ -49,13 +49,13 @@ export function QualityCards() {
                 <Icon className="h-12 w-12 text-white mx-auto" />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-[#091EB7] dark:group-hover:text-[#0ADDD7] transition-colors">
                   {card.name}
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                   {card.description}
                 </p>
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-medium text-sm">
+                <div className="flex items-center text-[#091EB7] dark:text-[#0ADDD7] font-medium text-sm">
                   Acceder
                   <svg
                     className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1"

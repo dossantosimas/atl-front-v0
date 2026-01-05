@@ -41,6 +41,17 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Colores corporativos */
+  --color-azul-coster: #091EB7;
+  --color-amarillo-canario: #EBA600;
+  --color-manantial-azul: #0ADDD7;
+  --color-rio-azul: #050F5C;
+  --color-caribeno: #FE941E;
+  --color-dia-calido: #F6DB99;
+  --color-amarillo-nuestro: #FAF7EE;
+  --color-cayena: #E00030;
+  --color-azul-nuestro: #F4F3FF;
 }
 
 :root {
@@ -51,7 +62,7 @@
   --card-foreground: oklch(0.13 0.028 261.692);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0.028 261.692);
-  --primary: oklch(0.21 0.034 264.665);
+  --primary: #091EB7; /* Azul coster */
   --primary-foreground: oklch(0.985 0.002 247.839);
   --secondary: oklch(0.967 0.003 264.542);
   --secondary-foreground: oklch(0.21 0.034 264.665);

@@ -418,9 +418,9 @@ export function AnalysisModal({
                         key={analysis.id}
                         className={`p-3 rounded-lg border ${
                           conditionResult === "pass" 
-                            ? "!bg-green-100 dark:!bg-green-900 !border-green-300 dark:!border-green-700" 
+                            ? "!bg-[#F4F3FF] dark:!bg-[#050F5C] !border-[#091EB7] dark:!border-[#0ADDD7]" 
                             : conditionResult === "fail" 
-                            ? "!bg-red-100 dark:!bg-red-900 !border-red-300 dark:!border-red-700" 
+                            ? "!bg-[#E00030]/10 dark:!bg-[#E00030]/20 !border-[#E00030] dark:!border-[#E00030]" 
                             : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         }`}
                         style={{ ...bgStyle, ...borderStyle }}
@@ -440,7 +440,7 @@ export function AnalysisModal({
                               Creado: {formatDate(analysis.created)}
                             </div>
                           </div>
-                          <Badge variant="outline" className="bg-green-100 dark:bg-green-900">
+                          <Badge variant="outline" className="bg-[#F4F3FF] dark:bg-[#050F5C]">
                             Completado
                           </Badge>
                         </div>

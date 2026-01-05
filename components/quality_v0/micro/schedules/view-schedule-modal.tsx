@@ -84,7 +84,7 @@ export function ViewScheduleModal({
               </label>
               <Badge
                 variant={schedule.isActive ? "default" : "secondary"}
-                className={schedule.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
+                className={schedule.isActive ? "bg-[#0ADDD7] text-white" : "bg-gray-500 text-white"}
               >
                 {schedule.isActive ? "Activo" : "Inactivo"}
               </Badge>

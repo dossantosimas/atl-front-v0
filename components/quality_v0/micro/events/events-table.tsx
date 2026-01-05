@@ -69,7 +69,7 @@ function getEventStatus(
     return {
       label: "Próximo",
       variant: "default",
-      className: "bg-blue-500 text-white border-blue-600",
+      className: "bg-[#091EB7] text-white border-[#050F5C]",
     };
   }
 
@@ -78,7 +78,7 @@ function getEventStatus(
     return {
       label: "Tomar muestra",
       variant: "outline",
-      className: "bg-yellow-500 text-white border-yellow-600",
+      className: "bg-[#EBA600] text-white border-[#FE941E]",
     };
   }
 
@@ -87,7 +87,7 @@ function getEventStatus(
     return {
       label: "Confirmado",
       variant: "default",
-      className: "bg-green-500 text-white border-green-600",
+      className: "bg-[#0ADDD7] text-white border-[#091EB7]",
     };
   }
 
@@ -96,7 +96,7 @@ function getEventStatus(
     return {
       label: "Expirado",
       variant: "destructive",
-      className: "bg-red-500 text-white border-red-600",
+      className: "bg-[#E00030] text-white border-[#E00030]",
     };
   }
 
@@ -203,7 +203,7 @@ export function EventsTable({
         const confirmDate = row.getValue("sampleconfirm") as string | null;
         if (confirmDate) {
           return (
-            <div className="text-green-600 dark:text-green-400">
+            <div className="text-[#0ADDD7] dark:text-[#0ADDD7]">
               {formatDate(confirmDate)}
             </div>
           );

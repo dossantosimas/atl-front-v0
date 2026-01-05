@@ -155,7 +155,7 @@ export function SchedulesTable() {
         return (
           <Badge
             variant={isActive ? "default" : "secondary"}
-            className={isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
+            className={isActive ? "bg-[#0ADDD7] text-white" : "bg-gray-500 text-white"}
           >
             {isActive ? "Activo" : "Inactivo"}
           </Badge>
