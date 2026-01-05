@@ -398,7 +398,13 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <FlaskConical className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <Image
+                src="/logo_azul.png"
+                alt="Cervecería del Atlántico"
+                width={24}
+                height={24}
+                className="h-6 w-auto"
+              />
               <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 Cervecería del Atlántico
               </h3>

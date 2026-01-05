@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Droplets, Cloud, Zap, MoreHorizontal, Target } from "lucide-react";
+import { Droplets, Cloud, Zap, MoreHorizontal } from "lucide-react";
 import type { Planning } from "@/lib/types/planning";
 
 interface PlanningCardsProps {

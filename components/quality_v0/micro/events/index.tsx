@@ -155,49 +155,49 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="space-y-4">
       <ServerTime onTimeUpdate={handleServerTimeUpdate} />
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Microbiología</h2>
-        {view === "leader" && (
-          <Button
-            onClick={() => setCreateModalOpen(true)}
-            disabled={!selectedEventType}
-            size="sm"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Agregar Evento
-          </Button>
-        )}
-      </div>
-      <div className="flex flex-row gap-3 items-end">
-        <div className="flex-1">
-          <MicroTypeSelector
-            value={selectedEventType}
-            onValueChange={setSelectedEventType}
-            placeholder="Selecciona un tipo de evento"
-          />
-        </div>
-        <Filters
-          eventTypeSelected={selectedEventType}
-          selectedMonth={selectedMonth}
-          selectedWeek={selectedWeek}
-          selectedYear={selectedYear}
-          onMonthChange={setSelectedMonth}
-          onWeekChange={setSelectedWeek}
-          onYearChange={setSelectedYear}
-        />
-        <button
-          onClick={() => handleSearch(1)}
-          disabled={isSearchDisabled}
-          className="inline-flex items-center justify-center rounded-md bg-primary p-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
-          aria-label="Buscar eventos"
-        >
-          <Search className="h-4 w-4" />
-        </button>
-      </div>
       
-      <div className="mt-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="flex flex-row gap-3 items-end">
+          <div className="flex-1">
+            <MicroTypeSelector
+              value={selectedEventType}
+              onValueChange={setSelectedEventType}
+              placeholder="Selecciona un tipo de evento"
+            />
+          </div>
+          <Filters
+            eventTypeSelected={selectedEventType}
+            selectedMonth={selectedMonth}
+            selectedWeek={selectedWeek}
+            selectedYear={selectedYear}
+            onMonthChange={setSelectedMonth}
+            onWeekChange={setSelectedWeek}
+            onYearChange={setSelectedYear}
+          />
+          <button
+            onClick={() => handleSearch(1)}
+            disabled={isSearchDisabled}
+            className="inline-flex items-center justify-center rounded-md bg-primary p-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
+            aria-label="Buscar eventos"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+          {view === "leader" && (
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              disabled={!selectedEventType}
+              className="inline-flex items-center justify-center rounded-md bg-primary p-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
+              aria-label="Agregar evento"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 overflow-x-auto">
         <EventsTable
           events={events}
           loading={loading}

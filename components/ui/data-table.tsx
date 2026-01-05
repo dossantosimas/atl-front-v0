@@ -48,16 +48,16 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="w-full h-full rounded-md border border-border bg-card overflow-hidden flex flex-col">
-      <div className="flex-1 overflow-auto relative">
-        <table className="w-full caption-bottom text-sm">
-          <thead className="sticky top-0 z-20 bg-muted/95 backdrop-blur-sm [&_tr]:border-b">
+    <div className="w-full border rounded-lg">
+      <div className="w-full">
+        <table className="w-full caption-bottom text-sm" style={{ tableLayout: 'fixed', width: '100%' }}>
+          <thead className="[&_tr]:border-b">
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-gray-50 dark:bg-gray-800">
                 {headerGroup.headers.map((header) => (
-                  <th
+                  <TableHead
                     key={header.id}
-                    className="text-foreground h-8 px-2 text-left align-middle font-medium whitespace-nowrap bg-muted/95 backdrop-blur-sm text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                    className="bg-gray-50 dark:bg-gray-800 text-left align-middle font-medium whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
                   >
                     {header.isPlaceholder
                       ? null
@@ -65,43 +65,43 @@ export function DataTable<TData, TValue>({
                           header.column.columnDef.header,
                           header.getContext()
                         )}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
           </thead>
-          <tbody className="[&_tr:last-child]:border-0">
+          <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <tr
+                <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td
+                    <TableCell
                       key={cell.id}
-                      className="p-1.5 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                      className="p-2 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
                       )}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             ) : (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={columns.length}
-                  className="h-16 text-center text-muted-foreground p-2 align-middle whitespace-nowrap text-xs"
+                  className="h-16 text-center text-gray-600 dark:text-gray-300 p-2 align-middle whitespace-nowrap text-xs"
                 >
                   {loading ? "Cargando..." : searchFilter ? "No se encontraron resultados" : "Sin datos"}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
+          </TableBody>
         </table>
       </div>
     </div>
