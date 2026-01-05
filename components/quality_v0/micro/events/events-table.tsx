@@ -62,9 +62,10 @@ function getEventStatus(
   const samplestartMs = new Date(event.samplestart).getTime();
   const sampleendMs = new Date(event.sampleend).getTime();
   const hasConfirm = event.sampleconfirm !== null && event.sampleconfirm !== "";
+  const confirmMs = hasConfirm ? new Date(event.sampleconfirm!).getTime() : null;
 
-  // 1. server-time < samplestart => Proximo (azul)
-  if (serverTimeMs < samplestartMs) {
+  // 1. server-time < samplestart y sampleconfirm es null o vacío => Proximo (azul)
+  if (serverTimeMs < samplestartMs && !hasConfirm) {
     return {
       label: "Próximo",
       variant: "default",
@@ -72,7 +73,7 @@ function getEventStatus(
     };
   }
 
-  // 2. samplestart < server-time < sampleend y sampleconfirm = null => Tomar muestra (amarillo)
+  // 2. samplestart <= server-time < sampleend y sampleconfirm = null o vacío => Tomar muestra (amarillo)
   if (serverTimeMs >= samplestartMs && serverTimeMs < sampleendMs && !hasConfirm) {
     return {
       label: "Tomar muestra",
@@ -81,8 +82,8 @@ function getEventStatus(
     };
   }
 
-  // 3. samplestart < server-time < sampleend y sampleconfirm = (tiene un tiempo) => Confirmado (verde)
-  if (serverTimeMs >= samplestartMs && serverTimeMs < sampleendMs && hasConfirm) {
+  // 3. samplestart <= sampleconfirm < sampleend => Confirmado (verde)
+  if (hasConfirm && confirmMs !== null && confirmMs >= samplestartMs && confirmMs < sampleendMs) {
     return {
       label: "Confirmado",
       variant: "default",
@@ -90,7 +91,7 @@ function getEventStatus(
     };
   }
 
-  // 4. sampleend < server-time y sampleconfirm = null => Expirado (rojo)
+  // 4. server-time >= sampleend y sampleconfirm = null o vacío => Expirado (rojo)
   if (serverTimeMs >= sampleendMs && !hasConfirm) {
     return {
       label: "Expirado",
@@ -99,8 +100,8 @@ function getEventStatus(
     };
   }
 
-  // 5. sampleend < server-time y sampleconfirm = (tiene un tiempo) => Pasado (naranja)
-  if (serverTimeMs >= sampleendMs && hasConfirm) {
+  // 5. sampleconfirm > sampleend => Pasado (naranja)
+  if (hasConfirm && confirmMs !== null && confirmMs > sampleendMs) {
     return {
       label: "Pasado",
       variant: "outline",

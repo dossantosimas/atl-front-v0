@@ -17,6 +17,7 @@ import {
   Briefcase,
   Truck,
   Lock,
+  Target,
 } from "lucide-react";
 
 export default function Home() {
@@ -24,33 +25,20 @@ export default function Home() {
     {
       title: "Calidad",
       description: "Gestión de eventos microbiológicos y control de calidad",
-      href: "/quality/micro/settings",
+      href: "/quality",
       icon: FlaskConical,
       color: "bg-blue-500",
       hoverColor: "hover:bg-blue-600",
       enabled: true,
-      subItems: [
-        {
-          title: "Operador",
-          href: "/quality/micro/operator",
-          description: "Gestión de eventos y muestras",
-        },
-        {
-          title: "Líder",
-          href: "/quality/micro/leader",
-          description: "Supervisión y análisis",
-        },
-        {
-          title: "Auditoría",
-          href: "/quality/micro/audit",
-          description: "Revisión y validación",
-        },
-        {
-          title: "Configuración",
-          href: "/quality/micro/settings",
-          description: "Ajustes y schedules",
-        },
-      ],
+    },
+    {
+      title: "Dirección",
+      description: "Planeación y gestión de recursos (Agua, CO2, Energía, Otros)",
+      href: "/direction",
+      icon: Target,
+      color: "bg-cyan-500",
+      hoverColor: "hover:bg-cyan-600",
+      enabled: true,
     },
     {
       title: "Mantenimiento",

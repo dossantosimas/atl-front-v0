@@ -3,6 +3,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Instalar ca-certificates para conexiones HTTPS (necesario para Google Fonts)
+# RUN apk add --no-cache ca-certificates
+
 # Copiar dependencias e instalar
 COPY package*.json ./
 RUN npm install
@@ -14,6 +17,7 @@ COPY . .
 # RUN npx prisma generate --schema=prisma/dev_auto_storage/schema.prisma
 
 # Compilar Next.js (usa turbopack)
+# Asegurar que el contenedor tenga acceso a internet para descargar fuentes
 RUN npm run build
 
 # ---------- Etapa 2: Runtime ----------
