@@ -222,7 +222,7 @@ export function EventModal({
               <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1 block">
                 Confirmado
               </label>
-              <p className={`text-sm ${event.sampleconfirm ? "text-[#0ADDD7] dark:text-[#0ADDD7] font-medium" : "text-gray-900 dark:text-gray-100"}`}>
+              <p className={`text-sm ${event.sampleconfirm ? "text-green-600 dark:text-green-400 font-medium" : "text-gray-900 dark:text-gray-100"}`}>
                 {formatDate(event.sampleconfirm)}
               </p>
             </div>

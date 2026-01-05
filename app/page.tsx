@@ -381,7 +381,7 @@ export default function Home() {
                   "Gestión integral de todas las gerencias",
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-[#0ADDD7] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                     <span className="text-gray-600 dark:text-gray-300">
                       {item}
                     </span>

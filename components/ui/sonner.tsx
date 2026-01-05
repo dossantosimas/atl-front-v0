@@ -26,7 +26,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       toastOptions={{
         classNames: {
-          success: "bg-[#F4F3FF] dark:bg-[#050F5C] border-[#0ADDD7] dark:border-[#091EB7]",
+          success: "bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800",
           error: "bg-[#E00030]/10 dark:bg-[#E00030]/20 border-[#E00030] dark:border-[#E00030]",
           info: "bg-[#F4F3FF] dark:bg-[#050F5C] border-[#091EB7] dark:border-[#0ADDD7]",
           warning: "bg-[#F6DB99] dark:bg-[#EBA600]/20 border-[#EBA600] dark:border-[#FE941E]",

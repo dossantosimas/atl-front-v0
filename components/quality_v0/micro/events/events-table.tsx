@@ -87,7 +87,7 @@ function getEventStatus(
     return {
       label: "Confirmado",
       variant: "default",
-      className: "bg-[#0ADDD7] text-white border-[#091EB7]",
+      className: "bg-green-500 text-white border-green-600",
     };
   }
 
@@ -203,7 +203,7 @@ export function EventsTable({
         const confirmDate = row.getValue("sampleconfirm") as string | null;
         if (confirmDate) {
           return (
-            <div className="text-[#0ADDD7] dark:text-[#0ADDD7]">
+            <div className="text-green-600 dark:text-green-400">
               {formatDate(confirmDate)}
             </div>
           );
