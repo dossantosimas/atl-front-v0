@@ -100,17 +100,20 @@ export function SchedulesTable() {
   const columns: ColumnDef<MicroSchedule>[] = [
     {
       accessorKey: "id",
-      header: "ID",
-      size: 50,
-      minSize: 50,
-      maxSize: 60,
+      header: () => <div className="w-10">ID</div>,
+      size: 40,
+      minSize: 35,
+      maxSize: 45,
       cell: ({ row }) => (
-        <div className="font-mono text-xs">{row.getValue("id")}</div>
+        <div className="font-mono text-xs w-10">{row.getValue("id")}</div>
       ),
     },
     {
       accessorKey: "name",
       header: "Nombre",
+      size: 250,
+      minSize: 200,
+      maxSize: 400,
       cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
     },
     {
