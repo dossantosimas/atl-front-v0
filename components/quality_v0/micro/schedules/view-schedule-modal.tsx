@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { parseCronToHumanReadable } from "@/lib/utils/cron-parser";
 
 interface ViewScheduleModalProps {
   schedule: MicroSchedule | null;
@@ -94,7 +95,10 @@ export function ViewScheduleModal({
               <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-1 block">
                 Frecuencia
               </label>
-              <p className="text-sm font-mono text-gray-900 dark:text-gray-100">
+              <p className="text-sm text-gray-900 dark:text-gray-100">
+                {parseCronToHumanReadable(schedule.frequency)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
                 {schedule.frequency}
               </p>
             </div>

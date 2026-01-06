@@ -48,73 +48,79 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="w-full border rounded-lg">
-      <div className="w-full">
-        <table className="w-full caption-bottom text-sm" style={{ tableLayout: 'fixed', width: '100%' }}>
-          <thead className="[&_tr]:border-b">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-gray-50 dark:bg-gray-800">
-                {headerGroup.headers.map((header) => {
-                  const columnSize = header.column.getSize();
-                  const columnDef = header.column.columnDef;
-                  const width = columnDef.size ? `${columnSize}px` : undefined;
-                  return (
-                    <TableHead
-                      key={header.id}
-                      style={{ width }}
-                      className="bg-gray-50 dark:bg-gray-800 text-left align-middle font-medium whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </thead>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b transition-colors"
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const columnSize = cell.column.getSize();
-                    const columnDef = cell.column.columnDef;
+    <div className="w-full border rounded-lg overflow-hidden">
+      <div className="w-full relative">
+        <div className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 border-b">
+          <table className="w-full caption-bottom text-sm" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <thead className="[&_tr]:border-b">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="bg-gray-50 dark:bg-gray-800">
+                  {headerGroup.headers.map((header) => {
+                    const columnSize = header.column.getSize();
+                    const columnDef = header.column.columnDef;
                     const width = columnDef.size ? `${columnSize}px` : undefined;
                     return (
-                      <TableCell
-                        key={cell.id}
+                      <TableHead
+                        key={header.id}
                         style={{ width }}
-                        className="p-2 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                        className="bg-gray-50 dark:bg-gray-800 text-left align-middle font-medium whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
                     );
                   })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-16 text-center text-gray-600 dark:text-gray-300 p-2 align-middle whitespace-nowrap text-xs"
-                >
-                  {loading ? "Cargando..." : searchFilter ? "No se encontraron resultados" : "Sin datos"}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </table>
+              ))}
+            </thead>
+          </table>
+        </div>
+        <div>
+          <table className="w-full caption-bottom text-sm" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      const columnSize = cell.column.getSize();
+                      const columnDef = cell.column.columnDef;
+                      const width = columnDef.size ? `${columnSize}px` : undefined;
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          style={{ width }}
+                          className="p-2 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-16 text-center text-gray-600 dark:text-gray-300 p-2 align-middle whitespace-nowrap text-xs"
+                  >
+                    {loading ? "Cargando..." : searchFilter ? "No se encontraron resultados" : "Sin datos"}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </table>
+        </div>
       </div>
     </div>
   );

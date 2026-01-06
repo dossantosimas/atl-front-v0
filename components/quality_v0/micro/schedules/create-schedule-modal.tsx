@@ -17,6 +17,7 @@ import { createMicroSchedule } from "@/lib/services/micro-schedules.service";
 import type { MicroElement } from "@/lib/types/micro-elements";
 import { useToast } from "@/components/toast";
 import { Loader2 } from "lucide-react";
+import { FrequencyConfigurator } from "./frequency-configurator";
 
 interface CreateScheduleModalProps {
   open: boolean;
@@ -46,12 +47,15 @@ export function CreateScheduleModal({
       // Resetear valores cuando se abre el modal
       setName("");
       setEventTypeId("");
-      setFrequency("");
+      // No resetear frequency aquí - el FrequencyConfigurator generará uno por defecto automáticamente
       setDescription("");
       setIsActive(true);
       setTimezone("America/Bogota");
       setSelectedElementIds([]);
       setElements([]);
+    } else {
+      // Solo resetear frequency cuando se cierra el modal para permitir que se genere uno nuevo la próxima vez
+      setFrequency("");
     }
   }, [open]);
 
@@ -147,16 +151,15 @@ export function CreateScheduleModal({
 
           <div>
             <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2 block">
-              Frecuencia (Cron) *
+              Frecuencia *
             </label>
-            <Input
-              value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-              placeholder="Ej: */30 * * * * * (cada 30 segundos)"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Formato: segundo minuto hora día mes día-semana
-            </p>
+            {open && (
+              <FrequencyConfigurator
+                key={open ? "open" : "closed"} // Forzar remontaje cuando se abre el modal
+                value={frequency}
+                onChange={setFrequency}
+              />
+            )}
           </div>
 
           <div>

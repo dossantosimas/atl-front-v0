@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { deleteMicroSchedule } from "@/lib/services/micro-schedules.service";
 import { useToast } from "@/components/toast";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { parseCronToHumanReadable } from "@/lib/utils/cron-parser";
 
 interface DeleteScheduleModalProps {
   schedule: MicroSchedule | null;
@@ -86,7 +87,10 @@ export function DeleteScheduleModal({
                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                   Frecuencia:
                 </span>
-                <p className="text-sm font-mono text-gray-900 dark:text-gray-100">
+                <p className="text-sm text-gray-900 dark:text-gray-100">
+                  {parseCronToHumanReadable(schedule.frequency)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 font-mono">
                   {schedule.frequency}
                 </p>
               </div>

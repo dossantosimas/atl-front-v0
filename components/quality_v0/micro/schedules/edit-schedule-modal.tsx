@@ -18,6 +18,7 @@ import { updateMicroSchedule } from "@/lib/services/micro-schedules.service";
 import type { MicroElement } from "@/lib/types/micro-elements";
 import { useToast } from "@/components/toast";
 import { Loader2 } from "lucide-react";
+import { FrequencyConfigurator } from "./frequency-configurator";
 
 interface EditScheduleModalProps {
   schedule: MicroSchedule | null;
@@ -157,16 +158,12 @@ export function EditScheduleModal({
 
           <div>
             <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2 block">
-              Frecuencia (Cron) *
+              Frecuencia *
             </label>
-            <Input
+            <FrequencyConfigurator
               value={frequency}
-              onChange={(e) => setFrequency(e.target.value)}
-              placeholder="Ej: */30 * * * * * (cada 30 segundos)"
+              onChange={setFrequency}
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              Formato: segundo minuto hora día mes día-semana
-            </p>
           </div>
 
           <div>

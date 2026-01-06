@@ -60,7 +60,7 @@ export default function SchedulesPage() {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 pb-8">
           <SchedulesTable />
         </div>
       </div>

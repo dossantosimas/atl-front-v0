@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ColumnDef } from "@tanstack/react-table";
 import { Plus, Eye, Edit, Trash2, Loader2, Search, X } from "lucide-react";
 import { useToast } from "@/components/toast";
+import { parseCronToHumanReadable } from "@/lib/utils/cron-parser";
 import { CreateScheduleModal } from "./create-schedule-modal";
 import { EditScheduleModal } from "./edit-schedule-modal";
 import { DeleteScheduleModal } from "./delete-schedule-modal";
@@ -127,37 +128,57 @@ export function SchedulesTable() {
     {
       accessorKey: "frequency",
       header: "Frecuencia",
-      cell: ({ row }) => (
-        <div className="font-mono text-xs">{row.getValue("frequency")}</div>
-      ),
+      size: 200,
+      minSize: 150,
+      maxSize: 300,
+      cell: ({ row }) => {
+        const frequency = row.getValue("frequency") as string;
+        const humanReadable = parseCronToHumanReadable(frequency);
+        return (
+          <div className="text-xs" title={frequency}>
+            {humanReadable}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "elements",
-      header: "Cantidad de Elementos",
+      header: () => <div className="text-center">Elementos</div>,
+      size: 100,
+      minSize: 90,
+      maxSize: 120,
       cell: ({ row }) => {
         const elements = row.original.elements || [];
-        return <div className="font-medium">{elements.length}</div>;
+        return <div className="font-medium text-center">{elements.length}</div>;
       },
     },
     {
       accessorKey: "isActive",
-      header: "Estado",
+      header: () => <div className="text-center">Estado</div>,
+      size: 100,
+      minSize: 90,
+      maxSize: 120,
       cell: ({ row }) => {
         const isActive = row.getValue("isActive") as boolean;
         return (
-          <Badge
-            variant={isActive ? "default" : "secondary"}
-            className={isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
-          >
-            {isActive ? "Activo" : "Inactivo"}
-          </Badge>
+          <div className="flex justify-center">
+            <Badge
+              variant={isActive ? "default" : "secondary"}
+              className={isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
+            >
+              {isActive ? "Activo" : "Inactivo"}
+            </Badge>
+          </div>
         );
       },
     },
     {
       accessorKey: "runCount",
-      header: "Ejecuciones",
-      cell: ({ row }) => <div>{row.getValue("runCount")}</div>,
+      header: () => <div className="text-center">Ejecuciones</div>,
+      size: 100,
+      minSize: 90,
+      maxSize: 120,
+      cell: ({ row }) => <div className="text-center">{row.getValue("runCount")}</div>,
     },
     {
       accessorKey: "lastRun",
@@ -238,7 +259,7 @@ export function SchedulesTable() {
         </div>
 
         {/* Tabla */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <DataTable 
             columns={columns} 
             data={filteredSchedules} 
