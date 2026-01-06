@@ -101,6 +101,9 @@ export function SchedulesTable() {
     {
       accessorKey: "id",
       header: "ID",
+      size: 50,
+      minSize: 50,
+      maxSize: 60,
       cell: ({ row }) => (
         <div className="font-mono text-xs">{row.getValue("id")}</div>
       ),
@@ -127,24 +130,10 @@ export function SchedulesTable() {
     },
     {
       accessorKey: "elements",
-      header: "Elementos",
+      header: "Cantidad de Elementos",
       cell: ({ row }) => {
         const elements = row.original.elements || [];
-        if (elements.length === 0) return <div className="text-muted-foreground">-</div>;
-        return (
-          <div className="flex flex-wrap gap-1">
-            {elements.slice(0, 2).map((el) => (
-              <Badge key={el.id} variant="outline" className="text-xs">
-                {el.name}
-              </Badge>
-            ))}
-            {elements.length > 2 && (
-              <Badge variant="outline" className="text-xs">
-                +{elements.length - 2}
-              </Badge>
-            )}
-          </div>
-        );
+        return <div className="font-medium">{elements.length}</div>;
       },
     },
     {
@@ -214,41 +203,39 @@ export function SchedulesTable() {
 
   return (
     <>
-      <div className="w-full h-full flex flex-col min-h-0 overflow-hidden">
-        <div className="flex items-center justify-between mb-2 flex-shrink-0">
-          <h2 className="text-lg font-semibold">Schedules Programados</h2>
-          <Button onClick={handleCreate} size="sm" className="h-8">
-            <Plus className="mr-2 h-3.5 w-3.5" />
-            Crear Schedule
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+      <div className="space-y-4">
+        {/* Filtros y botón de crear */}
+        <div className="flex items-center justify-between gap-4">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Filtrar por nombre..."
+              placeholder="Buscar por nombre..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="pl-8 pr-8 h-8 text-sm"
+              className="pl-9 pr-9"
             />
             {searchFilter && (
               <button
                 onClick={() => setSearchFilter("")}
                 className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
           {searchFilter && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
               {filteredSchedules.length} de {schedules.length} schedules
             </span>
           )}
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Crear Schedule
+          </Button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Tabla */}
+        <div className="overflow-x-auto">
           <DataTable 
             columns={columns} 
             data={filteredSchedules} 

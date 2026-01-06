@@ -54,19 +54,25 @@ export function DataTable<TData, TValue>({
           <thead className="[&_tr]:border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="bg-gray-50 dark:bg-gray-800">
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="bg-gray-50 dark:bg-gray-800 text-left align-middle font-medium whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const columnSize = header.column.getSize();
+                  const columnDef = header.column.columnDef;
+                  const width = columnDef.size ? `${columnSize}px` : undefined;
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{ width }}
+                      className="bg-gray-50 dark:bg-gray-800 text-left align-middle font-medium whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </thead>
@@ -78,17 +84,23 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800/50 border-b transition-colors"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="p-2 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const columnSize = cell.column.getSize();
+                    const columnDef = cell.column.columnDef;
+                    const width = columnDef.size ? `${columnSize}px` : undefined;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        style={{ width }}
+                        className="p-2 align-middle whitespace-nowrap text-xs [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (

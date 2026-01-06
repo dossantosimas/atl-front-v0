@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { User, Users } from "lucide-react";
+import { User, Users, Settings } from "lucide-react";
 
 interface MicroCard {
   id: string;
   name: string;
   description: string;
   href: string;
-  icon: typeof User | typeof Users;
+  icon: typeof User | typeof Users | typeof Settings;
   color: string;
   hoverColor: string;
 }
@@ -32,11 +32,20 @@ const microCards: MicroCard[] = [
     color: "bg-[#FE941E]",
     hoverColor: "hover:bg-[#EBA600]",
   },
+  {
+    id: "configuracion",
+    name: "Configuración",
+    description: "Configuración y gestión de schedules",
+    href: "/quality/micro/configuracion",
+    icon: Settings,
+    color: "bg-[#0ADDD7]",
+    hoverColor: "hover:bg-[#091EB7]",
+  },
 ];
 
 export function MicroCards() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
       {microCards.map((card) => {
         const Icon = card.icon;
         

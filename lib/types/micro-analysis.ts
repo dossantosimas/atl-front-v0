@@ -1,3 +1,11 @@
+export interface AnalysisTypeEvent {
+  id: string;
+  name: string;
+  start: string;
+  end: string;
+  description: string;
+}
+
 export interface AnalysisType {
   id: string;
   name: string;
@@ -5,6 +13,7 @@ export interface AnalysisType {
   condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | null;
   threshold: string | null;
   code: string;
+  events?: AnalysisTypeEvent[];
 }
 
 export interface MicroAnalysis {

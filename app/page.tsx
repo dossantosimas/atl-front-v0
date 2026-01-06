@@ -304,34 +304,6 @@ export default function Home() {
                 </div>
               );
 
-              if (gerencia.enabled && gerencia.subItems) {
-                // Si tiene subItems, mostrar un dropdown o modal
-                return (
-                  <div key={index} className="relative group">
-                    <Link href={gerencia.href}>{CardContent}</Link>
-                    {/* Submenu hover */}
-                    <div className="absolute top-full left-0 right-0 mt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 p-2">
-                        {gerencia.subItems.map((item, subIndex) => (
-                          <Link
-                            key={subIndex}
-                            href={item.href}
-                            className="block px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <div className="font-medium text-gray-900 dark:text-gray-100">
-                              {item.title}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {item.description}
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
               return gerencia.enabled ? (
                 <Link key={index} href={gerencia.href}>
                   {CardContent}

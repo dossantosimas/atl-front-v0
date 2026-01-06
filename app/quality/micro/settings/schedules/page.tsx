@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SchedulesTable } from "@/components/quality_v0/micro/schedules";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 
 export const metadata: Metadata = {
   title: "Quality Micro - Settings - Schedules",
@@ -8,22 +17,53 @@ export const metadata: Metadata = {
 
 export default function SchedulesPage() {
   return (
-    <div className="h-full flex-1 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 font-sans overflow-hidden">
-      <main className="h-full w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm p-4 overflow-hidden">
-        <div className="flex flex-col h-full min-h-0 overflow-hidden">
-          <div className="mb-3 flex-shrink-0">
-            <h1 className="text-xl font-bold leading-6 tracking-tight text-[#091EB7] dark:text-[#0ADDD7]">
-              Schedules Programados
-            </h1>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-              Gestión de schedules programados para eventos micro
-            </p>
-          </div>
-          <div className="w-full flex-1 min-h-0 overflow-hidden max-h-[calc(100vh-180px)]">
-            <SchedulesTable />
-          </div>
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumb className="mb-4">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Inicio</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/quality">Calidad</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/quality/micro">Microbiología</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/quality/micro/configuracion">Configuración</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Schedules</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100 mb-2">
+            Schedules
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Gestión de schedules programados para eventos microbiológicos
+          </p>
         </div>
-      </main>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <SchedulesTable />
+        </div>
+      </div>
     </div>
   );
 }
