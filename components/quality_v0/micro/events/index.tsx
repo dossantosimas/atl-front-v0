@@ -168,18 +168,18 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
   // Si es operación o liderazgo, mostrar tabs
   if (view === "operator" || view === "leader") {
     return (
-      <div className="h-full flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col">
         <Tabs defaultValue="detalle" className="w-full flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
             <TabsTrigger value="detalle">Eventos</TabsTrigger>
             <TabsTrigger value="general">Consolidados</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="detalle" className="space-y-4 mt-4">
+          <TabsContent value="detalle" className="space-y-4 mt-4 flex-1 min-h-0 flex flex-col overflow-hidden">
             {/* Tarjetas de estadísticas */}
             <StatsCards events={events} serverTime={serverTime} onTimeUpdate={handleServerTimeUpdate} />
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <div className="flex flex-row gap-3 items-end">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 lg:p-6 flex-shrink-0">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-end">
                 <div className="flex-1">
                   <MicroTypeSelector
                     value={selectedEventType}
@@ -219,24 +219,26 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 overflow-x-auto">
-              <EventsTable
-                events={events}
-                loading={loading}
-                total={total}
-                page={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                serverTime={serverTime}
-                view={view}
-                onEventUpdate={handleEventUpdate}
-                eventTypeName={getEventTypeName()}
-                eventTypeId={selectedEventType}
-              />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-auto">
+                <EventsTable
+                  events={events}
+                  loading={loading}
+                  total={total}
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  serverTime={serverTime}
+                  view={view}
+                  onEventUpdate={handleEventUpdate}
+                  eventTypeName={getEventTypeName()}
+                  eventTypeId={selectedEventType}
+                />
+              </div>
             </div>
           </TabsContent>
           
-          <TabsContent value="general" className="mt-4 flex-1 flex flex-col min-h-0 pb-8">
+          <TabsContent value="general" className="mt-4 flex-1 flex flex-col min-h-0">
             <GeneralChart serverTime={serverTime} qualityTypeId={qualityTypeId} />
           </TabsContent>
         </Tabs>
@@ -255,12 +257,12 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
 
   // Para audit, mantener el comportamiento anterior sin tabs
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* Tarjetas de estadísticas */}
       <StatsCards events={events} serverTime={serverTime} onTimeUpdate={handleServerTimeUpdate} />
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <div className="flex flex-row gap-3 items-end">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
           <div className="flex-1">
             <MicroTypeSelector
               value={selectedEventType}
@@ -290,22 +292,23 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 overflow-x-auto">
-        <EventsTable
-          events={events}
-          loading={loading}
-          total={total}
-          page={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          serverTime={serverTime}
-          view={view}
-          onEventUpdate={handleEventUpdate}
-          eventTypeName={getEventTypeName()}
-          eventTypeId={selectedEventType}
-        />
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-auto">
+          <EventsTable
+            events={events}
+            loading={loading}
+            total={total}
+            page={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            serverTime={serverTime}
+            view={view}
+            onEventUpdate={handleEventUpdate}
+            eventTypeName={getEventTypeName()}
+            eventTypeId={selectedEventType}
+          />
+        </div>
       </div>
     </div>
   );
 }
-

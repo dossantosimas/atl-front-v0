@@ -116,7 +116,7 @@ export function GeneralChart({ serverTime, qualityTypeId }: GeneralChartProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col h-full">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md flex flex-col flex-1 min-h-0 p-4 sm:p-6">
       <Card className="bg-transparent border-0 shadow-none flex-1 flex flex-col h-full">
         <CardHeader className="flex-shrink-0">
           <div className="flex items-start justify-between">

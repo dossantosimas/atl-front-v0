@@ -69,10 +69,10 @@ export default function ConfigPage() {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 pb-8 flex flex-col h-[calc(100vh-200px)]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex flex-col min-h-[600px] max-h-[calc(100vh-12rem)] flex-1">
             <Tabs defaultValue="event-types" className="w-full flex flex-col flex-1 min-h-0">
-              <div className="flex justify-between items-center mb-4">
-                <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 flex-shrink-0">
+                <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:grid-cols-4 flex-shrink-0">
                   <TabsTrigger value="event-types">Tipos de Eventos</TabsTrigger>
                   <TabsTrigger value="analysis-types">Tipos de Análisis</TabsTrigger>
                   <TabsTrigger value="elements">Elementos</TabsTrigger>
@@ -110,19 +110,19 @@ export default function ConfigPage() {
               </div>
               </div>
 
-              <TabsContent value="event-types" className="mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
+              <TabsContent value="event-types" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
                 <EventTypesManager />
               </TabsContent>
 
-              <TabsContent value="analysis-types" className="mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
+              <TabsContent value="analysis-types" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
                 <AnalysisTypesManager onRefresh={handleRefreshAnalysisTypes} />
               </TabsContent>
 
-              <TabsContent value="elements" className="mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
+              <TabsContent value="elements" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
                 <ElementsManager onRefresh={handleRefreshElements} />
               </TabsContent>
 
-              <TabsContent value="associations" className="mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
+              <TabsContent value="associations" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
                 <AssociationsManager
                   key={refreshKey}
                   onRefreshAnalysisTypes={handleRefreshAnalysisTypes}

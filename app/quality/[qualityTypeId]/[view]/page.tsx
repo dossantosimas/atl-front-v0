@@ -73,11 +73,11 @@ export default async function QualityTypeViewPage({
   const viewTitle = viewTitleMap[view] || view.charAt(0).toUpperCase() + view.slice(1);
 
   return (
-    <div className="h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden flex flex-col">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4 flex-shrink-0">
-          <Breadcrumb>
-            <BreadcrumbList>
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex-1 flex flex-col min-h-0">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 sm:gap-4 mb-4 flex-shrink-0">
+          <Breadcrumb className="overflow-x-auto">
+            <BreadcrumbList className="flex-wrap">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
                   <Link href="/">Inicio</Link>
@@ -103,11 +103,10 @@ export default async function QualityTypeViewPage({
           </Breadcrumb>
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 flex flex-col">
           <QualityV0 view={view as "operator" | "leader" | "audit"} qualityTypeId={id} />
         </div>
       </div>
     </div>
   );
 }
-
