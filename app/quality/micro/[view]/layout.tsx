@@ -11,7 +11,7 @@ export default function QualityMicroViewLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="h-screen w-full overflow-hidden">
+    <div className="h-full w-full flex flex-col min-h-0">
       {children}
     </div>
   );

@@ -16,27 +16,43 @@ interface MicroTypeSelectorProps {
   value?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
+  qualityTypeId?: number; // ID del quality-type para filtrar micro-types
+  microTypes?: MicroType[]; // Micro-types pre-filtrados desde el componente padre
 }
 
 export function MicroTypeSelector({
   value,
   onValueChange,
   placeholder = "Selecciona un tipo de evento",
+  qualityTypeId,
+  microTypes: externalMicroTypes,
 }: MicroTypeSelectorProps) {
   const [microTypes, setMicroTypes] = useState<MicroType[]>([]);
   const [loading, setLoading] = useState(true);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
+    // Si se pasan microTypes desde el padre, usarlos directamente
+    if (externalMicroTypes) {
+      setMicroTypes(externalMicroTypes);
+      setLoading(false);
+      return;
+    }
+
     async function fetchMicroTypes() {
       try {
         setLoading(true);
         const data = await getMicroTypes();
-        setMicroTypes(data);
-        showSuccess(
-          "Tipos de eventos cargados correctamente",
-          `Se encontraron ${data.length} tipos de eventos`
-        );
+        // Si hay qualityTypeId, filtrar los micro-types por ese quality-type
+        if (qualityTypeId !== undefined) {
+          const filteredData = data.filter(type => 
+            type.qualityType?.id === qualityTypeId || type.qualityTypeId === qualityTypeId
+          );
+          setMicroTypes(filteredData);
+        } else {
+          setMicroTypes(data);
+        }
+        // No mostrar toast cuando se pasan desde el padre
       } catch (err) {
         showError("Error al cargar tipos de eventos", err);
       } finally {
@@ -45,7 +61,7 @@ export function MicroTypeSelector({
     }
 
     fetchMicroTypes();
-  }, [showSuccess, showError]);
+  }, [showSuccess, showError, qualityTypeId, externalMicroTypes]);
 
   return (
     <div className="w-full">

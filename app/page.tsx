@@ -137,13 +137,13 @@ export default function Home() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                <Link href="/quality/micro/operator">
+                <Link href="/quality/1/operator">
                   <Button size="lg" className="group">
                     Acceder a Calidad
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
-                <Link href="/quality/micro/settings">
+                <Link href="/quality/config">
                   <Button size="lg" variant="outline">
                     Configuración
                   </Button>
@@ -172,19 +172,15 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Hero Image Placeholder */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-200 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-2xl">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center space-y-4 p-8">
-                      <Factory className="h-24 w-24 mx-auto text-[#091EB7] dark:text-[#0ADDD7] opacity-50" />
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    [Imagen Hero: Instalaciones de Cervecería del Atlántico]
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Recomendado: 1200x900px
-                  </p>
-                </div>
-              </div>
+            {/* Hero Image */}
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-2xl">
+              <Image
+                src="/planta_2.JPG"
+                alt="Instalaciones de Cervecería del Atlántico"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           </div>
         </div>
@@ -208,21 +204,15 @@ export default function Home() {
                 key={index}
                 className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-lg transition-all hover:shadow-xl"
               >
-                {/* Image Placeholder */}
-                <div className="aspect-video w-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600">
-                  <div className="flex h-full items-center justify-center p-6">
-                    <div className="text-center space-y-2">
-                      <div className="mx-auto h-16 w-16 rounded-full bg-[#F4F3FF] dark:bg-[#050F5C]/30 flex items-center justify-center">
-                        <CheckCircle2 className="h-8 w-8 text-[#091EB7] dark:text-[#0ADDD7]" />
-                      </div>
-                      <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                        {feature.imagePlaceholder}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Recomendado: 800x600px
-                      </p>
-                    </div>
-                  </div>
+                {/* Icon Section */}
+                <div className="aspect-video w-full bg-gradient-to-br from-[#F4F3FF] to-[#0ADDD7]/20 dark:from-[#050F5C]/20 dark:to-[#091EB7]/20 flex items-center justify-center p-8">
+                  {index === 0 ? (
+                    <Factory className="h-24 w-24 text-[#091EB7] dark:text-[#0ADDD7]" />
+                  ) : index === 1 ? (
+                    <FileCheck className="h-24 w-24 text-[#091EB7] dark:text-[#0ADDD7]" />
+                  ) : (
+                    <Calendar className="h-24 w-24 text-[#091EB7] dark:text-[#0ADDD7]" />
+                  )}
                 </div>
 
                 <div className="p-6">
@@ -321,18 +311,13 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* Left Image */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gradient-to-br from-[#F4F3FF] to-[#0ADDD7]/20 dark:from-[#050F5C]/20 dark:to-[#091EB7]/20 shadow-xl">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center space-y-4 p-8">
-                  <Factory className="h-20 w-20 mx-auto text-[#091EB7] dark:text-[#0ADDD7] opacity-50" />
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    [Imagen: Proceso de producción de cerveza]
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Recomendado: 1000x750px
-                  </p>
-                </div>
-              </div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-xl">
+              <Image
+                src="/planta_1.JPG"
+                alt="Proceso de producción de cerveza"
+                fill
+                className="object-cover"
+              />
             </div>
 
             {/* Right Content */}

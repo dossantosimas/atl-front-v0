@@ -7,9 +7,12 @@ export interface CreateMicroTypeDto {
   start: string;
   end: string;
   description: string;
+  qualityTypeId?: number | null;
 }
 
-export interface UpdateMicroTypeDto extends Partial<CreateMicroTypeDto> {}
+export interface UpdateMicroTypeDto extends Partial<CreateMicroTypeDto> {
+  qualityTypeId?: number | null;
+}
 
 export async function getMicroTypes(): Promise<MicroType[]> {
   try {
@@ -53,10 +56,11 @@ export async function updateMicroType(
   data: UpdateMicroTypeDto
 ): Promise<MicroType> {
   try {
-    const response = await axios.put<MicroType>(
-      `${env.BASE_URL}/micro-types/${id}`,
-      data
-    );
+    // Asegurar que el ID es un string limpio sin comillas
+    const cleanId = String(id).replace(/["']/g, '');
+    const url = `${env.BASE_URL}/micro-types/${cleanId}`;
+    console.log("Update URL:", url);
+    const response = await axios.put<MicroType>(url, data);
     return response.data;
   } catch (error) {
     console.error("Error updating micro type:", error);

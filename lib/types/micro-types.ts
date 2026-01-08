@@ -7,6 +7,11 @@ export interface MicroType {
   start: string;
   end: string;
   description: string;
+  qualityTypeId?: number | null;
+  qualityType?: {
+    id: number;
+    name: string;
+  };
   elements?: MicroElement[];
   analysisTypes?: AnalysisType[];
 }

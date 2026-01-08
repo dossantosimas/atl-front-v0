@@ -24,7 +24,7 @@ export default function SettingsPage() {
           
           <div className="w-full flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Link href="/quality/micro/settings/schedules">
+              <Link href="/quality/config/schedules">
                 <Button
                   variant="outline"
                   className="w-full h-32 flex flex-col items-center justify-center gap-2 hover:bg-accent transition-colors"

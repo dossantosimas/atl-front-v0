@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { User, Users, Settings } from "lucide-react";
+import { User, Users } from "lucide-react";
 
 interface MicroCard {
   id: string;
   name: string;
   description: string;
   href: string;
-  icon: typeof User | typeof Users | typeof Settings;
+  icon: typeof User | typeof Users;
   color: string;
   hoverColor: string;
 }
@@ -18,7 +18,7 @@ const microCards: MicroCard[] = [
     id: "operator",
     name: "Operación",
     description: "Gestión de eventos y muestras microbiológicas",
-    href: "/quality/micro/operator",
+    href: "operator", // Será relativo al qualityTypeId
     icon: User,
     color: "bg-[#091EB7]",
     hoverColor: "hover:bg-[#050F5C]",
@@ -27,32 +27,27 @@ const microCards: MicroCard[] = [
     id: "leader",
     name: "Liderazgo",
     description: "Supervisión y análisis de eventos microbiológicos",
-    href: "/quality/micro/leader",
+    href: "leader", // Será relativo al qualityTypeId
     icon: Users,
     color: "bg-[#FE941E]",
     hoverColor: "hover:bg-[#EBA600]",
   },
-  {
-    id: "configuracion",
-    name: "Configuración",
-    description: "Configuración y gestión de schedules",
-    href: "/quality/micro/configuracion",
-    icon: Settings,
-    color: "bg-[#0ADDD7]",
-    hoverColor: "hover:bg-[#091EB7]",
-  },
 ];
 
-export function MicroCards() {
+interface MicroCardsProps {
+  qualityTypeId: number;
+}
+
+export function MicroCards({ qualityTypeId }: MicroCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+    <div className="flex flex-wrap justify-center gap-6 max-w-4xl mx-auto">
       {microCards.map((card) => {
         const Icon = card.icon;
         
         return (
-          <Link key={card.id} href={card.href}>
+          <Link key={card.id} href={`/quality/${qualityTypeId}/${card.href}`}>
             <div
-              className={`group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer`}
+              className={`group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer w-full sm:w-[400px]`}
             >
               <div className={`${card.color} ${card.hoverColor} p-8 relative transition-colors`}>
                 <Icon className="h-12 w-12 text-white mx-auto" />
@@ -88,4 +83,3 @@ export function MicroCards() {
     </div>
   );
 }
-

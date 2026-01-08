@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ConfigProtection } from "@/components/quality/config-protection";
 import {
@@ -17,7 +16,7 @@ import { EventTypesManager } from "@/components/quality/config/event-types-manag
 import { AnalysisTypesManager } from "@/components/quality/config/analysis-types-manager";
 import { ElementsManager } from "@/components/quality/config/elements-manager";
 import { AssociationsManager } from "@/components/quality/config/associations-manager";
-import { Settings, Calendar } from "lucide-react";
+import { Calendar, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -26,7 +25,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export default function ConfiguracionPage() {
+export default function ConfigPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefreshAnalysisTypes = () => {
@@ -56,18 +55,15 @@ export default function ConfiguracionPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/quality/micro">Microbiología</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
                 <BreadcrumbPage>Configuración</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
 
           <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              Configuración
+            </h1>
             <p className="text-gray-600 dark:text-gray-300">
               Gestión de eventos microbiológicos, tipos de análisis, elementos y sus asociaciones
             </p>
@@ -82,20 +78,36 @@ export default function ConfiguracionPage() {
                   <TabsTrigger value="elements">Elementos</TabsTrigger>
                   <TabsTrigger value="associations">Asociaciones</TabsTrigger>
                 </TabsList>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link href="/quality/micro/settings/schedules">
-                      <Button variant="outline" size="icon" className="ml-4">
-                        <Calendar className="h-5 w-5" />
-                      </Button>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Schedules</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="flex flex-col gap-2 ml-4">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href="/quality/config/schedules">
+                        <Button variant="outline" size="icon">
+                          <Calendar className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Schedules</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href="/quality/config/types">
+                        <Button variant="outline" size="icon">
+                          <Tag className="h-5 w-5" />
+                        </Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Subareas de Calidad</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               </div>
 
               <TabsContent value="event-types" className="mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
@@ -124,4 +136,3 @@ export default function ConfiguracionPage() {
     </ConfigProtection>
   );
 }
-

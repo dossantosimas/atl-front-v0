@@ -10,9 +10,11 @@ import type { MicroEvent } from "@/lib/types/micro-events";
 import type { MicroType } from "@/lib/types/micro-types";
 import { useToast } from "@/components/toast";
 import { Search, Plus } from "lucide-react";
-import { ServerTime } from "@/components/server";
 import { CreateEventModal } from "./create-event-modal";
 import { Button } from "@/components/ui/button";
+import { StatsCards } from "./stats-cards";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GeneralChart } from "./general-chart";
 
 const MONTHS: Record<string, string> = {
   "01": "Enero",
@@ -31,9 +33,10 @@ const MONTHS: Record<string, string> = {
 
 interface QualityV0Props {
   view?: "operator" | "leader" | "audit";
+  qualityTypeId?: number; // ID del quality-type para filtrar micro-types
 }
 
-export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
+export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: undefined, qualityTypeId: undefined }) {
   const [selectedEventType, setSelectedEventType] = useState<string | undefined>();
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>();
   const [selectedWeek, setSelectedWeek] = useState<string | undefined>();
@@ -52,13 +55,21 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
     async function loadMicroTypes() {
       try {
         const types = await getMicroTypes();
-        setMicroTypes(types);
+        // Si hay qualityTypeId, filtrar los micro-types por ese quality-type
+        if (qualityTypeId !== undefined) {
+          const filteredTypes = types.filter(type => 
+            type.qualityType?.id === qualityTypeId || type.qualityTypeId === qualityTypeId
+          );
+          setMicroTypes(filteredTypes);
+        } else {
+          setMicroTypes(types);
+        }
       } catch (error) {
         console.error("Error loading micro types:", error);
       }
     }
     loadMicroTypes();
-  }, []);
+  }, [qualityTypeId]);
 
   const getEventTypeName = () => {
     if (!selectedEventType) return undefined;
@@ -154,9 +165,99 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
     }
   };
 
+  // Si es operación o liderazgo, mostrar tabs
+  if (view === "operator" || view === "leader") {
+    return (
+      <div className="h-full flex flex-col">
+        <Tabs defaultValue="detalle" className="w-full flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="detalle">Eventos</TabsTrigger>
+            <TabsTrigger value="general">Consolidados</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="detalle" className="space-y-4 mt-4">
+            {/* Tarjetas de estadísticas */}
+            <StatsCards events={events} serverTime={serverTime} onTimeUpdate={handleServerTimeUpdate} />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <div className="flex flex-row gap-3 items-end">
+                <div className="flex-1">
+                  <MicroTypeSelector
+                    value={selectedEventType}
+                    onValueChange={setSelectedEventType}
+                    placeholder="Selecciona un tipo de evento"
+                    qualityTypeId={qualityTypeId}
+                    microTypes={microTypes}
+                  />
+                </div>
+                <Filters
+                  eventTypeSelected={selectedEventType}
+                  selectedMonth={selectedMonth}
+                  selectedWeek={selectedWeek}
+                  selectedYear={selectedYear}
+                  onMonthChange={setSelectedMonth}
+                  onWeekChange={setSelectedWeek}
+                  onYearChange={setSelectedYear}
+                />
+                <button
+                  onClick={() => handleSearch(1)}
+                  disabled={isSearchDisabled}
+                  className="inline-flex items-center justify-center rounded-md bg-primary p-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
+                  aria-label="Buscar eventos"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+                {view === "leader" && (
+                  <button
+                    onClick={() => setCreateModalOpen(true)}
+                    disabled={!selectedEventType}
+                    className="inline-flex items-center justify-center rounded-md bg-primary p-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
+                    aria-label="Agregar evento"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 overflow-x-auto">
+              <EventsTable
+                events={events}
+                loading={loading}
+                total={total}
+                page={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                serverTime={serverTime}
+                view={view}
+                onEventUpdate={handleEventUpdate}
+                eventTypeName={getEventTypeName()}
+                eventTypeId={selectedEventType}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="general" className="mt-4 flex-1 flex flex-col min-h-0 pb-8">
+            <GeneralChart serverTime={serverTime} qualityTypeId={qualityTypeId} />
+          </TabsContent>
+        </Tabs>
+
+        {view === "leader" && (
+          <CreateEventModal
+            open={createModalOpen}
+            onOpenChange={setCreateModalOpen}
+            typeId={selectedEventType}
+            onEventCreated={handleEventCreated}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Para audit, mantener el comportamiento anterior sin tabs
   return (
     <div className="space-y-4">
-      <ServerTime onTimeUpdate={handleServerTimeUpdate} />
+      {/* Tarjetas de estadísticas */}
+      <StatsCards events={events} serverTime={serverTime} onTimeUpdate={handleServerTimeUpdate} />
       
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="flex flex-row gap-3 items-end">
@@ -165,6 +266,8 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
               value={selectedEventType}
               onValueChange={setSelectedEventType}
               placeholder="Selecciona un tipo de evento"
+              qualityTypeId={qualityTypeId}
+              externalMicroTypes={microTypes}
             />
           </div>
           <Filters
@@ -184,16 +287,6 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
           >
             <Search className="h-4 w-4" />
           </button>
-          {view === "leader" && (
-            <button
-              onClick={() => setCreateModalOpen(true)}
-              disabled={!selectedEventType}
-              className="inline-flex items-center justify-center rounded-md bg-primary p-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
-              aria-label="Agregar evento"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -212,15 +305,6 @@ export function QualityV0({ view }: QualityV0Props = { view: undefined }) {
           eventTypeId={selectedEventType}
         />
       </div>
-
-      {view === "leader" && (
-        <CreateEventModal
-          open={createModalOpen}
-          onOpenChange={setCreateModalOpen}
-          typeId={selectedEventType}
-          onEventCreated={handleEventCreated}
-        />
-      )}
     </div>
   );
 }

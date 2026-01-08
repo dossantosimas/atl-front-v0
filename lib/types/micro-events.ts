@@ -50,3 +50,15 @@ export interface MicroEventsSearchResponse {
   };
 }
 
+export interface MicroEventsByDateItem {
+  typeId: string;
+  typeName: string;
+  manual: number;
+  confirmado: number;
+  pasado: number;
+  proximo: number;
+  tomarMuestra: number;
+  expirado: number;
+  total: number;
+}
+

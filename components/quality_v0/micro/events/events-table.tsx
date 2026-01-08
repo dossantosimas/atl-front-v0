@@ -156,6 +156,9 @@ export function EventsTable({
     {
       accessorKey: "id",
       header: "id",
+      size: 50,
+      minSize: 40,
+      maxSize: 60,
       cell: ({ row }) => (
         <div className="font-mono text-xs">{row.getValue("id")}</div>
       ),
@@ -163,16 +166,22 @@ export function EventsTable({
     {
       accessorKey: "code",
       header: "codigo",
+      size: 80,
+      minSize: 70,
+      maxSize: 100,
       cell: ({ row }) => {
-        return <div>{row.getValue("code") || "-"}</div>;
+        return <div className="text-xs">{row.getValue("code") || "-"}</div>;
       },
     },
     {
       accessorKey: "element.name",
       header: "elemento",
+      size: 250,
+      minSize: 200,
+      maxSize: 350,
       cell: ({ row }) => {
         const element = row.original.element;
-        return <div>{element?.name || "-"}</div>;
+        return <div className="font-medium">{element?.name || "-"}</div>;
       },
     },
     {

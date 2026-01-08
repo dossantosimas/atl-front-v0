@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { QualityV0 } from "@/components/quality_v0/micro/events";
+import { getQualityTypeById } from "@/lib/services/quality-types.service";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -15,16 +16,17 @@ const validViews = ["operator", "leader", "audit"] as const;
 
 type ViewType = (typeof validViews)[number];
 
-interface QualityMicroViewPageProps {
+interface QualityTypeViewPageProps {
   params: Promise<{
+    qualityTypeId: string;
     view: string;
   }>;
 }
 
 export async function generateMetadata({
   params,
-}: QualityMicroViewPageProps): Promise<Metadata> {
-  const { view } = await params;
+}: QualityTypeViewPageProps): Promise<Metadata> {
+  const { view, qualityTypeId } = await params;
 
   if (!validViews.includes(view as ViewType)) {
     return {
@@ -36,17 +38,29 @@ export async function generateMetadata({
 
   return {
     title: `ATLapp - ${viewTitle}`,
-    description: `Quality micro page for ${view} view`,
+    description: `Quality page for ${view} view`,
   };
 }
 
-export default async function QualityMicroViewPage({
+export default async function QualityTypeViewPage({
   params,
-}: QualityMicroViewPageProps) {
-  const { view } = await params;
+}: QualityTypeViewPageProps) {
+  const { view, qualityTypeId } = await params;
+  const id = parseInt(qualityTypeId, 10);
+
+  if (isNaN(id)) {
+    notFound();
+  }
 
   // Validar que view sea uno de los valores permitidos
   if (!validViews.includes(view as ViewType)) {
+    notFound();
+  }
+
+  let qualityType;
+  try {
+    qualityType = await getQualityTypeById(id);
+  } catch (error) {
     notFound();
   }
 
@@ -78,7 +92,7 @@ export default async function QualityMicroViewPage({
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/quality/micro">Microbiología</Link>
+                  <Link href={`/quality/${id}`}>{qualityType.name}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -90,7 +104,7 @@ export default async function QualityMicroViewPage({
         </div>
 
         <div className="flex-1 min-h-0">
-          <QualityV0 view={view as "operator" | "leader" | "audit"} qualityTypeId={1} />
+          <QualityV0 view={view as "operator" | "leader" | "audit"} qualityTypeId={id} />
         </div>
       </div>
     </div>

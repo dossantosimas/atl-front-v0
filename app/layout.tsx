@@ -15,9 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" suppressHydrationWarning className="h-full">
+    <html lang="es" suppressHydrationWarning>
       <body
-        className="antialiased h-full flex flex-col font-sans"
+        className="antialiased font-sans"
         style={{
           fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         }}
@@ -29,9 +29,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <GlobalHeader />
-          <div className="flex-1 flex flex-col">
-            {children}
-          </div>
+          {children}
           <Toaster />
         </ThemeProvider>
       </body>

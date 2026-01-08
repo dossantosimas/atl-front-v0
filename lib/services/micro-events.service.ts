@@ -3,6 +3,7 @@ import type {
   MicroEventsSearchParams,
   MicroEventsSearchResponse,
   MicroEvent,
+  MicroEventsByDateItem,
 } from "../types/micro-events";
 import { env } from "@/config/env";
 
@@ -73,6 +74,27 @@ export async function createMicroEvent(
     return response.data;
   } catch (error) {
     console.error("Error creating micro event:", error);
+    throw error;
+  }
+}
+
+export async function getMicroEventsByDate(
+  date: string, // Formato: YYYY-MM-DD
+  qualityTypeId?: number // Opcional: ID del quality-type para filtrar
+): Promise<MicroEventsByDateItem[]> {
+  try {
+    const searchParams = new URLSearchParams();
+    searchParams.append("date", date);
+    if (qualityTypeId !== undefined) {
+      searchParams.append("qualityTypeId", String(qualityTypeId));
+    }
+    
+    const response = await axios.get<MicroEventsByDateItem[]>(
+      `${env.BASE_URL}/micro-events/by-date?${searchParams.toString()}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching micro events by date:", error);
     throw error;
   }
 }
