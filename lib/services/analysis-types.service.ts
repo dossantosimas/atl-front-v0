@@ -5,7 +5,7 @@ import { env } from "@/config/env";
 export interface CreateAnalysisTypeDto {
   name: string;
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
-  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | null;
+  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between" | null;
   threshold: string | null;
   code: string;
 }

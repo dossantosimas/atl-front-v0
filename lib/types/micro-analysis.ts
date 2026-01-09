@@ -10,7 +10,7 @@ export interface AnalysisType {
   id: string;
   name: string;
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
-  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | null;
+  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between" | null;
   threshold: string | null;
   code: string;
   events?: AnalysisTypeEvent[];
@@ -21,7 +21,7 @@ export interface MicroAnalysis {
   name: string;
   code: string;
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
-  condition: "=" | ">" | ">=" | "<" | "<=" | "!=";
+  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between";
   value?: string | null;
   threshold?: string | null;
   type_id: string; // snake_case como viene del API
@@ -31,7 +31,7 @@ export interface MicroAnalysis {
 
 export interface CreateMicroAnalysisDto {
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
-  condition: "=" | ">" | ">=" | "<" | "<=" | "!=";
+  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between";
   eventId: number;
   typeId: string;
   value?: string;

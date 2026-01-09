@@ -269,7 +269,7 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
               onValueChange={setSelectedEventType}
               placeholder="Selecciona un tipo de evento"
               qualityTypeId={qualityTypeId}
-              externalMicroTypes={microTypes}
+              microTypes={microTypes}
             />
           </div>
           <Filters

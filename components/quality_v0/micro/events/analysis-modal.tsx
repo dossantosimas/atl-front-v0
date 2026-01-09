@@ -38,7 +38,7 @@ interface AnalysisModalProps {
 interface AnalysisFormData {
   typeId: string;
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
-  condition: "=" | ">" | ">=" | "<" | "<=" | "!=";
+  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between";
   value?: string;
   mode?: "MNPC" | "numeric"; // Para dual
   result?: "POSITIVO" | "NEGATIVO"; // Para boolean
@@ -155,7 +155,7 @@ export function AnalysisModal({
         eventId: event.id,
         typeId: analysisType.id,
         options: form.options,
-        condition: condition as "=" | ">" | ">=" | "<" | "<=" | "!=",
+        condition: condition as "=" | ">" | ">=" | "<" | "<=" | "!=" | "between",
         value: value || "",
         name: analysisType.name,
         code: analysisType.code,
@@ -283,6 +283,28 @@ export function AnalysisModal({
         break;
       case "!=":
         passes = valueStr !== thresholdStr;
+        break;
+      case "between":
+        // Para "between", el threshold debe tener formato "min-max" (ej: "10-20")
+        // El valor debe estar dentro del rango (min <= valor <= max)
+        if (areNumbers) {
+          const rangeParts = thresholdStr.split("-");
+          if (rangeParts.length === 2) {
+            const min = parseFloat(rangeParts[0].trim());
+            const max = parseFloat(rangeParts[1].trim());
+            if (!isNaN(min) && !isNaN(max) && isFinite(min) && isFinite(max)) {
+              passes = valueNum >= min && valueNum <= max;
+            }
+          }
+        } else {
+          // Si no son números, intentar comparación como strings (menos común pero posible)
+          const rangeParts = thresholdStr.split("-");
+          if (rangeParts.length === 2) {
+            const min = rangeParts[0].trim();
+            const max = rangeParts[1].trim();
+            passes = valueStr >= min && valueStr <= max;
+          }
+        }
         break;
       default:
         return "no-threshold";

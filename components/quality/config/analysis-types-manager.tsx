@@ -47,7 +47,7 @@ export function AnalysisTypesManager({ onRefresh }: AnalysisTypesManagerProps) {
   const [formData, setFormData] = useState({
     name: "",
     options: "string" as "dual" | "boolean" | "otro" | "numeric" | "string",
-    condition: null as "=" | ">" | ">=" | "<" | "<=" | "!=" | null,
+    condition: null as "=" | ">" | ">=" | "<" | "<=" | "!=" | "between" | null,
     threshold: "",
     code: "",
   });
@@ -286,6 +286,7 @@ export function AnalysisTypesManager({ onRefresh }: AnalysisTypesManagerProps) {
                     <SelectItem value="<">&lt;</SelectItem>
                     <SelectItem value="<=">&lt;=</SelectItem>
                     <SelectItem value="!=">!=</SelectItem>
+                    <SelectItem value="between">Entre</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -299,7 +300,7 @@ export function AnalysisTypesManager({ onRefresh }: AnalysisTypesManagerProps) {
                   id="threshold"
                   value={formData.threshold}
                   onChange={(e) => setFormData({ ...formData, threshold: e.target.value })}
-                  placeholder="Ej: 100"
+                  placeholder={formData.condition === "between" ? "Ej: 10-20" : "Ej: 100"}
                 />
               </div>
               <div>

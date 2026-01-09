@@ -18,7 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/toast";
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
 import type { MicroType } from "@/lib/types/micro-types";
 import type { AnalysisType } from "@/lib/types/micro-analysis";
 import type { MicroElement } from "@/lib/types/micro-elements";
@@ -32,6 +32,8 @@ import {
 } from "@/lib/services/micro-types.service";
 import { getAnalysisTypes } from "@/lib/services/analysis-types.service";
 import { getMicroElements } from "@/lib/services/micro-elements.service";
+import { AnalysisTypesCombobox } from "./analysis-types-combobox";
+import { ElementsCombobox } from "./elements-combobox";
 
 interface AssociationsManagerProps {
   onRefreshAnalysisTypes?: () => void;
@@ -44,6 +46,8 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
   const [elements, setElements] = useState<MicroElement[]>([]);
   const [selectedEventType, setSelectedEventType] = useState<string>("");
   const [selectedEventTypeData, setSelectedEventTypeData] = useState<MicroType | null>(null);
+  const [selectedAnalysisType, setSelectedAnalysisType] = useState<string>("");
+  const [selectedElement, setSelectedElement] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const { showSuccess, showError } = useToast();
 
@@ -87,7 +91,7 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
   };
 
   const handleAssociateAnalysisType = async (analysisTypeId: string) => {
-    if (!selectedEventType || !selectedEventTypeData) return;
+    if (!selectedEventType || !selectedEventTypeData || !analysisTypeId) return;
     try {
       await associateAnalysisTypeToMicroType(selectedEventType, analysisTypeId);
       showSuccess("Tipo de análisis asociado", "El tipo de análisis se ha asociado correctamente.");
@@ -99,6 +103,7 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
           ...selectedEventTypeData,
           analysisTypes: [...(selectedEventTypeData.analysisTypes || []), analysisType],
         });
+        setSelectedAnalysisType(""); // Resetear el selector
       }
     } catch (error) {
       showError("Error al asociar tipo de análisis", error);
@@ -123,19 +128,20 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
     }
   };
 
-  const handleAssociateElement = async (elementId: number) => {
-    if (!selectedEventType || !selectedEventTypeData) return;
+  const handleAssociateElement = async (elementId: string) => {
+    if (!selectedEventType || !selectedEventTypeData || !elementId) return;
     try {
-      await associateElementToMicroType(selectedEventType, elementId);
+      await associateElementToMicroType(selectedEventType, Number(elementId));
       showSuccess("Elemento asociado", "El elemento se ha asociado correctamente.");
       
       // Actualizar el estado local sin recargar todo
-      const element = elements.find(el => el.id === elementId);
+      const element = elements.find(el => String(el.id) === elementId);
       if (element && selectedEventTypeData) {
         setSelectedEventTypeData({
           ...selectedEventTypeData,
           elements: [...(selectedEventTypeData.elements || []), element],
         });
+        setSelectedElement(""); // Resetear el selector
       }
     } catch (error) {
       showError("Error al asociar elemento", error);
@@ -204,21 +210,19 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
                 Tipos de Análisis Asociados
               </h4>
               {availableAnalysisTypes.length > 0 && (
-                <Select
-                  value=""
-                  onValueChange={handleAssociateAnalysisType}
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Agregar tipo de análisis" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableAnalysisTypes.map((at) => (
-                      <SelectItem key={at.id} value={at.id}>
-                        {at.name} ({at.code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <AnalysisTypesCombobox
+                    analysisTypes={availableAnalysisTypes}
+                    value={selectedAnalysisType}
+                    onValueChange={(value) => {
+                      setSelectedAnalysisType(value);
+                      if (value) {
+                        handleAssociateAnalysisType(value);
+                      }
+                    }}
+                    placeholder="Agregar tipo de análisis"
+                  />
+                </div>
               )}
             </div>
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -273,21 +277,19 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
                 Elementos Asociados
               </h4>
               {availableElements.length > 0 && (
-                <Select
-                  value=""
-                  onValueChange={(value) => handleAssociateElement(Number(value))}
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Agregar elemento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableElements.map((el) => (
-                      <SelectItem key={el.id} value={String(el.id)}>
-                        {el.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <ElementsCombobox
+                    elements={availableElements}
+                    value={selectedElement}
+                    onValueChange={(value) => {
+                      setSelectedElement(value);
+                      if (value) {
+                        handleAssociateElement(value);
+                      }
+                    }}
+                    placeholder="Agregar elemento"
+                  />
+                </div>
               )}
             </div>
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">

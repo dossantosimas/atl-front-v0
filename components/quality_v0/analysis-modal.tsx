@@ -38,7 +38,7 @@ interface AnalysisModalProps {
 interface AnalysisFormData {
   typeId: string;
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
-  condition: "=" | ">" | ">=" | "<" | "<=" | "!=";
+  condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between";
   value?: string;
   mode?: "MNPC" | "numeric"; // Para dual
   result?: "POSITIVO" | "NEGATIVO"; // Para boolean
@@ -154,7 +154,7 @@ export function AnalysisModal({
         eventId: event.id,
         typeId: analysisType.id,
         options: form.options,
-        condition: condition as "=" | ">" | ">=" | "<" | "<=" | "!=",
+        condition: condition as "=" | ">" | ">=" | "<" | "<=" | "!=" | "between",
         value: value || "",
         name: analysisType.name,
         code: analysisType.code,
