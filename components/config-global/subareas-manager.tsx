@@ -104,22 +104,31 @@ export function SubareasManager({ onRefresh }: SubareasManagerProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      showError("Error", "El nombre de la subárea es requerido");
+      return;
+    }
+
     if (!formData.departmentId) {
       showError("Error", "Debes seleccionar un departamento");
       return;
     }
 
     try {
-      const data: CreateSubareaDto | UpdateSubareaDto = {
-        name: formData.name,
-        departmentId: parseInt(formData.departmentId, 10),
-      };
-
       if (editingSubarea) {
-        await updateSubarea(editingSubarea.id, data);
+        const updateData: UpdateSubareaDto = {
+          name: trimmedName,
+          departmentId: parseInt(formData.departmentId, 10),
+        };
+        await updateSubarea(editingSubarea.id, updateData);
         showSuccess("Subárea actualizada", "La subárea se ha actualizado correctamente");
       } else {
-        await createSubarea(data);
+        const createData: CreateSubareaDto = {
+          name: trimmedName,
+          departmentId: parseInt(formData.departmentId, 10),
+        };
+        await createSubarea(createData);
         showSuccess("Subárea creada", "La subárea se ha creado correctamente");
       }
 

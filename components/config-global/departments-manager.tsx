@@ -91,17 +91,28 @@ export function DepartmentsManager({ onRefresh }: DepartmentsManagerProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const data: CreateDepartmentDto | UpdateDepartmentDto = {
-        name: formData.name,
-        ...(formData.plantId && { plantId: parseInt(formData.plantId, 10) }),
-      };
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      showError("Error", "El nombre del departamento es requerido");
+      return;
+    }
 
+    try {
       if (editingDepartment) {
-        await updateDepartment(editingDepartment.id, data);
+        const updateData: UpdateDepartmentDto = {
+          name: trimmedName,
+          ...(formData.plantId && { plantId: parseInt(formData.plantId, 10) }),
+        };
+        await updateDepartment(editingDepartment.id, updateData);
         showSuccess("Departamento actualizado", "El departamento se ha actualizado correctamente");
       } else {
-        await createDepartment(data);
+        const createData: CreateDepartmentDto = {
+          name: trimmedName,
+        };
+        if (formData.plantId) {
+          createData.plantId = parseInt(formData.plantId, 10);
+        }
+        await createDepartment(createData);
         showSuccess("Departamento creado", "El departamento se ha creado correctamente");
       }
 

@@ -430,10 +430,14 @@ export function ChemicalSubstancesManager({ onRefresh }: ChemicalSubstancesManag
                   type="number"
                   min="0"
                   max="4"
-                  value={formData.nfpaHealth || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nfpaHealth: parseInt(e.target.value) || 0 })
-                  }
+                  value={formData.nfpaHealth ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      nfpaHealth: value === "" ? 0 : parseInt(value) || 0 
+                    });
+                  }}
                   required
                 />
               </div>
@@ -446,10 +450,14 @@ export function ChemicalSubstancesManager({ onRefresh }: ChemicalSubstancesManag
                   type="number"
                   min="0"
                   max="4"
-                  value={formData.nfpaFlammability || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nfpaFlammability: parseInt(e.target.value) || 0 })
-                  }
+                  value={formData.nfpaFlammability ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      nfpaFlammability: value === "" ? 0 : parseInt(value) || 0 
+                    });
+                  }}
                   required
                 />
               </div>
@@ -462,10 +470,14 @@ export function ChemicalSubstancesManager({ onRefresh }: ChemicalSubstancesManag
                   type="number"
                   min="0"
                   max="4"
-                  value={formData.nfpaReactivity || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nfpaReactivity: parseInt(e.target.value) || 0 })
-                  }
+                  value={formData.nfpaReactivity ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      nfpaReactivity: value === "" ? 0 : parseInt(value) || 0 
+                    });
+                  }}
                   required
                 />
               </div>
