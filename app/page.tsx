@@ -70,11 +70,11 @@ export default function Home() {
     {
       title: "Seguridad",
       description: "Protocolos de seguridad y salud ocupacional",
-      href: "#",
+      href: "/security",
       icon: Shield,
       color: "bg-red-500",
       hoverColor: "hover:bg-red-600",
-      enabled: false,
+      enabled: true,
     },
     {
       title: "Gestión",

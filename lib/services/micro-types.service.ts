@@ -128,31 +128,12 @@ export async function associateElementToMicroType(
   elementId: number
 ): Promise<void> {
   try {
-    // Según la documentación: PUT /micro-elements/:id con { "typeIds": ["uuid-del-micro-type"] }
-    // Necesitamos obtener los tipos actuales del elemento para no reemplazarlos
-    // Primero intentamos obtener el elemento completo que podría incluir typeIds
-    try {
-      const { getMicroElementById } = await import("./micro-elements.service");
-      const element = await getMicroElementById(elementId);
-      
-      // Si el elemento tiene typeIds, los usamos; si no, solo agregamos el nuevo
-      const existingTypeIds = (element as any).typeIds || [];
-      const allTypeIds = existingTypeIds.includes(microTypeId) 
-        ? existingTypeIds 
-        : [...existingTypeIds, microTypeId];
-      
-      await axios.put(
-        `${env.BASE_URL}/micro-elements/${elementId}`,
-        { typeIds: allTypeIds }
-      );
-    } catch (getError) {
-      // Si no podemos obtener el elemento o no tiene typeIds, solo agregamos el nuevo tipo
-      // Nota: esto reemplazará los tipos existentes, pero es la única opción sin más información
-      await axios.put(
-        `${env.BASE_URL}/micro-elements/${elementId}`,
-        { typeIds: [microTypeId] }
-      );
-    }
+    // Usar POST /micro-elements/:id/types para agregar tipos sin quitar los existentes
+    // Este endpoint hace merge automáticamente
+    await axios.post(
+      `${env.BASE_URL}/micro-elements/${elementId}/types`,
+      { typeIds: [microTypeId] }
+    );
   } catch (error) {
     console.error("Error associating element to micro type:", error);
     throw error;
@@ -164,28 +145,14 @@ export async function disassociateElementFromMicroType(
   elementId: number
 ): Promise<void> {
   try {
-    // Para desasociar, necesitamos obtener los tipos actuales del elemento
-    // y remover el microTypeId de la lista
-    try {
-      const { getMicroElementById } = await import("./micro-elements.service");
-      const element = await getMicroElementById(elementId);
-      
-      const existingTypeIds = (element as any).typeIds || [];
-      const remainingTypeIds = existingTypeIds.filter((id: string) => id !== microTypeId);
-      
-      // Actualizar el elemento con los tipos restantes
-      await axios.put(
-        `${env.BASE_URL}/micro-elements/${elementId}`,
-        { typeIds: remainingTypeIds }
-      );
-    } catch (getError) {
-      // Si no podemos obtener el elemento, intentamos con un array vacío
-      // Esto desasociará el elemento de todos los tipos
-      await axios.put(
-        `${env.BASE_URL}/micro-elements/${elementId}`,
-        { typeIds: [] }
-      );
-    }
+    // Usar DELETE /micro-elements/:id/types para remover tipos específicos
+    // Este endpoint remueve solo los tipos especificados, mantiene los demás
+    await axios.delete(
+      `${env.BASE_URL}/micro-elements/${elementId}/types`,
+      {
+        data: { typeIds: [microTypeId] }
+      }
+    );
   } catch (error) {
     console.error("Error disassociating element from micro type:", error);
     throw error;
