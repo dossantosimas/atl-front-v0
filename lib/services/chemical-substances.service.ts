@@ -313,10 +313,24 @@ export interface MatrixDataResponse {
   matrix: CompatibilityMatrix[];
 }
 
-export async function getMatrixData(): Promise<MatrixDataResponse> {
+/**
+ * Obtiene los datos de la matriz de compatibilidad
+ * Si se proporciona subareaId, usa el endpoint específico para obtener solo las sustancias de esa subárea
+ * Si no se proporciona, obtiene todas las sustancias activas
+ * 
+ * GET /chemicals/matrix-data (sin filtro)
+ * GET /chemicals/subareas/:subareaId/substances-matrix (con filtro por subárea)
+ */
+export async function getMatrixData(subareaId?: number): Promise<MatrixDataResponse> {
   try {
+    // Si hay subareaId, usar el endpoint específico para subáreas
+    // Si no, usar el endpoint general
+    const url = subareaId 
+      ? `${env.BASE_URL}/chemicals/subareas/${subareaId}/substances-matrix`
+      : `${env.BASE_URL}/chemicals/matrix-data`;
+      
     const response = await axios.get<MatrixDataResponse>(
-      `${env.BASE_URL}/chemicals/matrix-data`,
+      url,
       {
         // Agregar headers para evitar caché
         headers: {
@@ -453,6 +467,73 @@ export async function getSubstancePictograms(substanceId: string): Promise<Picto
     return response.data;
   } catch (error) {
     console.error("Error fetching substance pictograms:", error);
+    throw error;
+  }
+}
+
+// ==================== Subarea - Substance Relationships ====================
+
+export interface AssignSubstancesToSubareaDto {
+  substanceIds: string[];
+}
+
+/**
+ * Asigna sustancias a una subárea (merge, no quita existentes)
+ * POST /chemicals/subareas/:subareaId/substances
+ */
+export async function assignSubstancesToSubarea(
+  subareaId: number,
+  data: AssignSubstancesToSubareaDto
+): Promise<void> {
+  try {
+    await axios.post(
+      `${env.BASE_URL}/chemicals/subareas/${subareaId}/substances`,
+      data
+    );
+  } catch (error) {
+    console.error("Error assigning substances to subarea:", error);
+    throw error;
+  }
+}
+
+/**
+ * Remueve sustancias de una subárea
+ * DELETE /chemicals/subareas/:subareaId/substances
+ */
+export async function removeSubstancesFromSubarea(
+  subareaId: number,
+  data: AssignSubstancesToSubareaDto
+): Promise<void> {
+  try {
+    await axios.delete(
+      `${env.BASE_URL}/chemicals/subareas/${subareaId}/substances`,
+      { data }
+    );
+  } catch (error) {
+    console.error("Error removing substances from subarea:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene sustancias de una subárea con su matriz de compatibilidad
+ * GET /chemicals/subareas/:subareaId/substances-matrix
+ */
+export async function getSubareaSubstancesMatrix(subareaId: number): Promise<MatrixDataResponse> {
+  try {
+    const response = await axios.get<MatrixDataResponse>(
+      `${env.BASE_URL}/chemicals/subareas/${subareaId}/substances-matrix`,
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching subarea substances matrix:", error);
     throw error;
   }
 }

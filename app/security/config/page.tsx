@@ -17,6 +17,7 @@ import { ChemicalGroupsManager } from "@/components/security/config/chemical-gro
 import { ChemicalSubstancesManager } from "@/components/security/config/chemical-substances-manager";
 import { CompatibilityMatrixManager } from "@/components/security/config/compatibility-matrix-manager";
 import { PictogramsManager } from "@/components/security/config/pictograms-manager";
+import { SubareasManager } from "@/components/security/config/subareas-manager";
 
 export default function SecurityConfigPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -61,12 +62,13 @@ export default function SecurityConfigPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex flex-col min-h-[600px] max-h-[calc(100vh-12rem)] flex-1">
           <Tabs defaultValue="compatibility-levels" className="w-full flex flex-col flex-1 min-h-0">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 flex-shrink-0">
-              <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-5 flex-shrink-0">
+              <TabsList className="grid w-full sm:w-auto grid-cols-3 sm:grid-cols-6 flex-shrink-0">
                 <TabsTrigger value="compatibility-levels">Niveles</TabsTrigger>
                 <TabsTrigger value="groups">Grupos</TabsTrigger>
                 <TabsTrigger value="substances">Sustancias</TabsTrigger>
                 <TabsTrigger value="pictograms">Pictogramas</TabsTrigger>
                 <TabsTrigger value="matrix">Matriz</TabsTrigger>
+                <TabsTrigger value="subareas">Subáreas</TabsTrigger>
               </TabsList>
             </div>
 
@@ -103,6 +105,13 @@ export default function SecurityConfigPage() {
               className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4"
             >
               <CompatibilityMatrixManager key={refreshKey} />
+            </TabsContent>
+
+            <TabsContent
+              value="subareas"
+              className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4"
+            >
+              <SubareasManager key={refreshKey} onRefresh={handleRefresh} />
             </TabsContent>
           </Tabs>
         </div>

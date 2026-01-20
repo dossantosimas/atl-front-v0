@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ interface ChemicalSubstancesComboboxProps {
   placeholder?: string;
   className?: string;
   excludeId?: string;
+  excludeIds?: string[]; // Array de IDs a excluir
+  substances?: ChemicalSubstance[]; // Lista opcional de sustancias filtradas
 }
 
 export function ChemicalSubstancesCombobox({
@@ -34,21 +36,44 @@ export function ChemicalSubstancesCombobox({
   placeholder = "Seleccione una sustancia química...",
   className,
   excludeId,
+  excludeIds,
+  substances: providedSubstances, // Sustancias proporcionadas desde fuera
 }: ChemicalSubstancesComboboxProps) {
   const [open, setOpen] = useState(false);
   const [substances, setSubstances] = useState<ChemicalSubstance[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Combinar excludeId y excludeIds en un array único
+  const excludedIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (excludeId) ids.add(excludeId);
+    if (excludeIds) excludeIds.forEach(id => ids.add(id));
+    return Array.from(ids);
+  }, [excludeId, excludeIds]);
+
   useEffect(() => {
+    // Si se proporcionan sustancias, usarlas directamente
+    if (providedSubstances) {
+      const filtered = excludedIds.length > 0
+        ? providedSubstances.filter((s) => !excludedIds.includes(s.id)) 
+        : providedSubstances;
+      setSubstances(filtered);
+      setLoading(false);
+      return;
+    }
+
+    // Si no se proporcionan, cargar todas
     loadSubstances();
-  }, []);
+  }, [providedSubstances, excludedIds]);
 
   const loadSubstances = async () => {
     try {
       setLoading(true);
       const data = await getChemicalSubstances();
-      // Filtrar si excludeId está definido
-      const filtered = excludeId ? data.filter((s) => s.id !== excludeId) : data;
+      // Filtrar si hay IDs excluidos
+      const filtered = excludedIds.length > 0 
+        ? data.filter((s) => !excludedIds.includes(s.id)) 
+        : data;
       setSubstances(filtered);
     } catch (error) {
       console.error("Error loading chemical substances:", error);

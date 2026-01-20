@@ -27,29 +27,29 @@ const securityCards: SecurityCard[] = [
 
 export function SecurityCards() {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto">
+    <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto">
       {securityCards.map((card) => {
         const Icon = card.icon;
         
         return (
           <Link key={card.id} href={card.href}>
             <div
-              className={`group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer`}
+              className={`group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer min-w-0 flex flex-col`}
             >
-              <div className={`${card.color} ${card.hoverColor} p-8 relative transition-colors`}>
-                <Icon className="h-12 w-12 text-white mx-auto" />
+              <div className={`${card.color} ${card.hoverColor} p-4 sm:p-6 md:p-8 relative transition-colors flex-shrink-0`}>
+                <Icon className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-white mx-auto" />
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100 group-hover:text-[#091EB7] dark:group-hover:text-[#0ADDD7] transition-colors">
+              <div className="p-4 sm:p-6 flex-1 flex flex-col">
+                <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-1 sm:mb-2 text-gray-900 dark:text-gray-100 group-hover:text-[#091EB7] dark:group-hover:text-[#0ADDD7] transition-colors">
                   {card.name}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-3 sm:mb-4 flex-1">
                   {card.description}
                 </p>
-                <div className="flex items-center text-[#091EB7] dark:text-[#0ADDD7] font-medium text-sm">
+                <div className="flex items-center text-[#091EB7] dark:text-[#0ADDD7] font-medium text-xs sm:text-sm">
                   Acceder
                   <svg
-                    className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1"
+                    className="ml-2 h-3 w-3 sm:h-4 sm:w-4 transition-transform group-hover:translate-x-1"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

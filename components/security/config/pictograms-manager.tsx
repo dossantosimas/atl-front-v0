@@ -325,24 +325,23 @@ export function PictogramsManager() {
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             const finalUrl = getPictogramImageUrl(pictogram.imageUrl);
-                            console.error("❌ Error al cargar imagen:", {
-                              originalUrl: pictogram.imageUrl,
-                              finalUrl: finalUrl,
-                              attemptedSrc: target.src,
-                              name: pictogram.name,
-                              id: pictogram.id,
-                              error: e
-                            });
-                            console.error("❌ Detalles del error:", {
-                              imgElement: target,
-                              naturalWidth: target.naturalWidth,
-                              naturalHeight: target.naturalHeight,
-                              complete: target.complete
-                            });
+                            // Solo log en desarrollo
+                            if (process.env.NODE_ENV === 'development') {
+                              console.warn("⚠️ PictogramManager - No se pudo cargar imagen:", {
+                                originalUrl: pictogram.imageUrl,
+                                finalUrl: finalUrl,
+                                attemptedSrc: target.src,
+                                name: pictogram.name,
+                                id: pictogram.id
+                              });
+                            }
                             target.style.display = 'none';
                             const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-xs text-gray-400">Error</div>';
+                            if (parent && !parent.querySelector('.placeholder')) {
+                              const placeholder = document.createElement('div');
+                              placeholder.className = 'w-full h-full flex items-center justify-center text-xs text-gray-400 placeholder';
+                              placeholder.textContent = 'Error';
+                              parent.appendChild(placeholder);
                             }
                           }}
                         />

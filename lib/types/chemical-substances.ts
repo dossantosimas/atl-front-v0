@@ -28,6 +28,13 @@ export interface CreateChemicalGroupDto {
 
 export interface UpdateChemicalGroupDto extends Partial<CreateChemicalGroupDto> {}
 
+// Tipos para Subareas (referencia al tipo existente)
+export interface Subarea {
+  id: number;
+  name: string;
+  departmentId: number;
+}
+
 // Tipos para Sustancias Químicas
 export interface ChemicalSubstance {
   id: string;
@@ -44,6 +51,7 @@ export interface ChemicalSubstance {
   nfpaReactivity: number;
   isActive: boolean;
   pictograms?: Pictogram[];
+  subareas?: Subarea[];
 }
 
 export interface CreateChemicalSubstanceDto {

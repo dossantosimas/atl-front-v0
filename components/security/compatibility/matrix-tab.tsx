@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CompatibilityLegend } from "./compatibility-legend";
 import { CompatibilityDetailsModal } from "./compatibility-details-modal";
+import { SubareaFilter } from "./subarea-filter";
 import { PictogramsDisplay } from "@/components/security/config/pictograms-display";
+import { Loader2 } from "lucide-react";
+import { getMatrixData } from "@/lib/services/chemical-substances.service";
 import type {
   ChemicalSubstance,
   CompatibilityMatrix,
@@ -17,19 +20,46 @@ import {
 } from "@/lib/utils/compatibility-helpers";
 
 interface MatrixTabProps {
-  substances: ChemicalSubstance[];
-  matrix: CompatibilityMatrix[];
+  initialSubstances: ChemicalSubstance[];
+  initialMatrix: CompatibilityMatrix[];
   levels: CompatibilityLevel[];
 }
 
 export function MatrixTab({
-  substances,
-  matrix,
+  initialSubstances,
+  initialMatrix,
   levels,
 }: MatrixTabProps) {
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | null>(null);
+  const [selectedSubareaId, setSelectedSubareaId] = useState<number | null>(null);
+  const [substances, setSubstances] = useState<ChemicalSubstance[]>(initialSubstances);
+  const [matrix, setMatrix] = useState<CompatibilityMatrix[]>(initialMatrix);
+  const [loading, setLoading] = useState(false);
   const [selectedCompatibility, setSelectedCompatibility] =
     useState<CompatibilityMatrix | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Cargar datos cuando cambia la subárea seleccionada (o cuando no hay filtro)
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        // Si no hay subárea seleccionada, cargar todas las sustancias sin filtro
+        // Si hay subárea seleccionada, cargar solo las de esa subárea
+        const data = await getMatrixData(selectedSubareaId || undefined);
+        setSubstances(data.substances);
+        setMatrix(data.matrix);
+      } catch (error) {
+        console.error("Error loading matrix data:", error);
+        setSubstances([]);
+        setMatrix([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [selectedSubareaId]);
 
   const handleCellClick = (substanceAId: string, substanceBId: string) => {
     if (substanceAId === substanceBId) return;
@@ -46,8 +76,45 @@ export function MatrixTab({
   return (
     <>
       <div className="space-y-6">
-        {/* Leyenda */}
-        <CompatibilityLegend levels={levels} />
+        {/* Filtro de Departamento y Subárea */}
+        <SubareaFilter
+          selectedDepartmentId={selectedDepartmentId}
+          selectedSubareaId={selectedSubareaId}
+          onDepartmentChange={(deptId) => {
+            setSelectedDepartmentId(deptId);
+            // Reset subarea - el useEffect se encargará de recargar los datos
+            setSelectedSubareaId(null);
+          }}
+          onSubareaChange={setSelectedSubareaId}
+        />
+
+        {loading && (
+          <div className="flex items-center justify-center py-8">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">
+                {selectedSubareaId 
+                  ? "Cargando datos de la subárea..." 
+                  : "Cargando todas las sustancias..."}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {!loading && substances.length === 0 && (
+          <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              {selectedSubareaId 
+                ? "No se encontraron sustancias químicas asociadas a esta subárea."
+                : "No se encontraron sustancias químicas activas."}
+            </p>
+          </div>
+        )}
+
+        {!loading && substances.length > 0 && (
+          <>
+            {/* Leyenda */}
+            <CompatibilityLegend levels={levels} />
 
         {/* Matriz de Compatibilidad */}
         <Card>
@@ -152,6 +219,8 @@ export function MatrixTab({
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
 
       {/* Modal de Detalles */}
