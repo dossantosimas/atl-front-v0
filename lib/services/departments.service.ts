@@ -100,6 +100,52 @@ export async function getAllSubareas(): Promise<Subarea[]> {
 }
 
 /**
+ * Obtiene subáreas con filtros opcionales usando query parameters
+ * GET /subareas?departmentId=...&name=...
+ */
+export interface GetSubareasParams {
+  departmentId?: number;
+  name?: string;
+}
+
+export async function getSubareas(
+  params?: GetSubareasParams
+): Promise<Subarea[]> {
+  try {
+    const searchParams = new URLSearchParams();
+    if (params?.departmentId) {
+      searchParams.append("departmentId", params.departmentId.toString());
+    }
+    if (params?.name) {
+      searchParams.append("name", params.name);
+    }
+    
+    const url = `${env.BASE_URL}/subareas${
+      searchParams.toString() ? `?${searchParams.toString()}` : ""
+    }`;
+    
+    console.log("🔍 [getSubareas] Parámetros recibidos:", params);
+    console.log("🌐 [getSubareas] URL completa:", url);
+    console.log("📋 [getSubareas] Query string:", searchParams.toString());
+    
+    const response = await axios.get<Subarea[]>(url);
+    
+    console.log("✅ [getSubareas] Respuesta recibida:", response.data.length, "subáreas");
+    console.log("📊 [getSubareas] Datos:", response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error("❌ [getSubareas] Error fetching subareas:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("❌ [getSubareas] Error response:", error.response?.data);
+      console.error("❌ [getSubareas] Error status:", error.response?.status);
+      console.error("❌ [getSubareas] Error URL:", error.config?.url);
+    }
+    throw error;
+  }
+}
+
+/**
  * Obtiene subáreas filtradas por departamento
  * Ruta: GET /departments/:id/subareas
  * Respuesta esperada: Subarea[]
