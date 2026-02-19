@@ -32,6 +32,21 @@ export async function getMicroElementsByType(typeId: string): Promise<MicroEleme
   }
 }
 
+export async function getMicroElementsByTypeAndProgram(
+  typeId: string,
+  programId: string
+): Promise<MicroElement[]> {
+  try {
+    const response = await axios.get<MicroElement[]>(
+      `${env.BASE_URL}/micro-elements/by-type/${typeId}/by-program/${programId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching micro elements by type and program:", error);
+    throw error;
+  }
+}
+
 export async function getMicroElementById(id: number): Promise<MicroElement> {
   try {
     const response = await axios.get<MicroElement>(

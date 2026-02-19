@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventTypesManager } from "@/components/quality/config/event-types-manager";
 import { AnalysisTypesManager } from "@/components/quality/config/analysis-types-manager";
 import { ElementsManager } from "@/components/quality/config/elements-manager";
+import { ProgramsManager } from "@/components/quality/config/programs-manager";
 import { AssociationsManager } from "@/components/quality/config/associations-manager";
 import { Calendar, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -72,10 +73,11 @@ export default function ConfigPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex flex-col min-h-[600px] max-h-[calc(100vh-12rem)] flex-1">
             <Tabs defaultValue="event-types" className="w-full flex flex-col flex-1 min-h-0">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 flex-shrink-0">
-                <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:grid-cols-4 flex-shrink-0">
+                <TabsList className="grid w-full sm:w-auto grid-cols-2 sm:grid-cols-5 flex-shrink-0">
                   <TabsTrigger value="event-types">Tipos de Eventos</TabsTrigger>
                   <TabsTrigger value="analysis-types">Tipos de Análisis</TabsTrigger>
                   <TabsTrigger value="elements">Elementos</TabsTrigger>
+                  <TabsTrigger value="programs">Programas</TabsTrigger>
                   <TabsTrigger value="associations">Asociaciones</TabsTrigger>
                 </TabsList>
               <div className="flex flex-col gap-2 ml-4">
@@ -120,6 +122,10 @@ export default function ConfigPage() {
 
               <TabsContent value="elements" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
                 <ElementsManager onRefresh={handleRefreshElements} />
+              </TabsContent>
+
+              <TabsContent value="programs" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
+                <ProgramsManager onRefresh={handleRefreshElements} />
               </TabsContent>
 
               <TabsContent value="associations" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
