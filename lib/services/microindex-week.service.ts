@@ -4,13 +4,14 @@ import type { MicroIndexWeekDay } from "@/lib/types/microindex-week";
 
 export async function getMicroIndexWeek(
   year: number,
-  week: number
+  week: number,
+  month?: number
 ): Promise<MicroIndexWeekDay[]> {
   try {
     const response = await axios.get<MicroIndexWeekDay[]>(
-      `${env.BASE_URL}/microindex_week`,
+      `${env.BASE_URL}/microindex_week_test`,
       {
-        params: { year, week },
+        params: { year, week, month },
       }
     );
     return response.data;

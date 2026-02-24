@@ -64,6 +64,21 @@ interface FlatAnalysis {
   nonCompliantCount: number;
 }
 
+const MONTHS = [
+  { value: 1, label: "Enero" },
+  { value: 2, label: "Febrero" },
+  { value: 3, label: "Marzo" },
+  { value: 4, label: "Abril" },
+  { value: 5, label: "Mayo" },
+  { value: 6, label: "Junio" },
+  { value: 7, label: "Julio" },
+  { value: 8, label: "Agosto" },
+  { value: 9, label: "Septiembre" },
+  { value: 10, label: "Octubre" },
+  { value: 11, label: "Noviembre" },
+  { value: 12, label: "Diciembre" },
+];
+
 function getIsoWeek(date: Date): number {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
@@ -73,11 +88,14 @@ function getIsoWeek(date: Date): number {
 }
 
 function formatDateLabel(value: string): string {
-  const date = new Date(value);
-  return date.toLocaleDateString("es-CO", {
+  const date = new Date(value + "T12:00:00"); // Añadir mediodía para evitar problemas de zona horaria
+  const label = date.toLocaleDateString("es-CO", {
+    weekday: "long",
     day: "2-digit",
-    month: "2-digit",
+    month: "short",
   });
+  // Capitalizar primera letra
+  return label.charAt(0).toUpperCase() + label.slice(1).replace(".", "");
 }
 
 function getMode(values: number[]): number {
@@ -119,7 +137,12 @@ function getGroupRowShadeClass(groupName: string): string {
   return palette[Math.abs(hash) % palette.length];
 }
 
-function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: PiRow[] } {
+function parseWeeklyKpi(days: MicroIndexWeekDay[]): { 
+  dateKeys: string[]; 
+  rows: PiRow[]; 
+  dailyTotalIndex: Record<string, number>;
+  weeklyTotalIndex: number;
+} {
   const flattened: FlatAnalysis[] = [];
 
   days.forEach((day) => {
@@ -253,6 +276,7 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
   const now = new Date();
   const currentYear = now.getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedMonth, setSelectedMonth] = useState<number>(now.getMonth() + 1);
   const [selectedWeek, setSelectedWeek] = useState<number>(getIsoWeek(now));
   const [loading, setLoading] = useState(false);
   const [rawData, setRawData] = useState<MicroIndexWeekDay[]>([]);
@@ -266,16 +290,27 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
     return result;
   }, [currentYear]);
 
-  const weeks = useMemo(() => {
-    return Array.from({ length: 53 }, (_, index) => index + 1);
-  }, []);
+  /**
+   * Obtiene todas las semanas del año que corresponden a un mes específico
+   */
+  const weeksInMonth = useMemo(() => {
+    const weeksSet = new Set<number>();
+    const firstDay = new Date(selectedYear, selectedMonth - 1, 1);
+    const lastDay = new Date(selectedYear, selectedMonth, 0);
+    
+    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      weeksSet.add(getIsoWeek(new Date(d)));
+    }
+    
+    return Array.from(weeksSet).sort((a, b) => a - b);
+  }, [selectedYear, selectedMonth]);
 
   const { dateKeys, rows, dailyTotalIndex, weeklyTotalIndex } = useMemo(() => parseWeeklyKpi(rawData), [rawData]);
 
   const handleSearch = async () => {
     try {
       setLoading(true);
-      const data = await getMicroIndexWeek(selectedYear, selectedWeek);
+      const data = await getMicroIndexWeek(selectedYear, selectedWeek, selectedMonth);
       setRawData(data);
     } catch (error) {
       showError("Error al consultar KPI semanal", error);
@@ -309,6 +344,32 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
           </div>
 
           <div className="flex flex-col gap-1">
+            <label className="text-xs text-muted-foreground">mes</label>
+            <Select
+              value={String(selectedMonth)}
+              onValueChange={(value) => {
+                const month = Number(value);
+                setSelectedMonth(month);
+                // Resetear semana si la actual no pertenece al nuevo mes
+                const firstDay = new Date(selectedYear, month - 1, 1);
+                const firstWeek = getIsoWeek(firstDay);
+                setSelectedWeek(firstWeek);
+              }}
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Mes" />
+              </SelectTrigger>
+              <SelectContent>
+                {MONTHS.map((m) => (
+                  <SelectItem key={m.value} value={String(m.value)}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground">semana</label>
             <Select
               value={String(selectedWeek)}
@@ -318,7 +379,7 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                 <SelectValue placeholder="Semana" />
               </SelectTrigger>
               <SelectContent>
-                {weeks.map((week) => (
+                {weeksInMonth.map((week) => (
                   <SelectItem key={week} value={String(week)}>
                     Semana {week}
                   </SelectItem>
