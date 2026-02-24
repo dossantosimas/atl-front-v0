@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast";
 import { X } from "lucide-react";
 import type { MicroType } from "@/lib/types/micro-types";
@@ -33,8 +34,9 @@ import type { MicroProgram } from "@/lib/types/micro-programs";
 import {
   getMicroTypes,
   getMicroTypeById,
-  associateAnalysisTypeToMicroType,
-  disassociateAnalysisTypeFromMicroType,
+  removeAnalysisTypeFromMicroType,
+  updateMicroTypeAnalysisTypes,
+  updateAnalysisPtsConfig,
   associateElementToMicroType,
   disassociateElementFromMicroType,
 } from "@/lib/services/micro-types.service";
@@ -55,18 +57,13 @@ import { AnalysisTypesCombobox } from "./analysis-types-combobox";
 import { ElementsCombobox } from "./elements-combobox";
 import { EventTypesCombobox } from "./event-types-combobox";
 
-interface AssociationsManagerProps {
-  onRefreshAnalysisTypes?: () => void;
-  onRefreshElements?: () => void;
-}
-
-export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements }: AssociationsManagerProps) {
+export function AssociationsManager() {
   const [eventTypes, setEventTypes] = useState<MicroType[]>([]);
   const [analysisTypes, setAnalysisTypes] = useState<AnalysisType[]>([]);
   const [elements, setElements] = useState<MicroElement[]>([]);
   const [programs, setPrograms] = useState<MicroProgram[]>([]);
   const [selectedEventType, setSelectedEventType] = useState<string>("");
-  const [selectedProgramId, setSelectedProgramId] = useState<string>("");
+  const [selectedProgramId] = useState<string>("");
   const [selectedEventTypeData, setSelectedEventTypeData] = useState<MicroType | null>(null);
   const [selectedAnalysisType, setSelectedAnalysisType] = useState<string>("");
   const [selectedElement, setSelectedElement] = useState<string>("");
@@ -75,6 +72,8 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
   const [programDialogOpen, setProgramDialogOpen] = useState(false);
   const [selectedElementForPrograms, setSelectedElementForPrograms] = useState<MicroElement | null>(null);
   const [togglingProgramKey, setTogglingProgramKey] = useState<string | null>(null);
+  const [analysisPtsConfig, setAnalysisPtsConfig] = useState<Record<string, { microIndexOn: boolean; weighted: string }>>({});
+  const [savingAnalysisId, setSavingAnalysisId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingElementsByProgram, setLoadingElementsByProgram] = useState(false);
   const { showSuccess, showError } = useToast();
@@ -101,6 +100,20 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
     }
     loadElementsByTypeAndProgram(selectedEventType, selectedProgramId);
   }, [selectedEventType, selectedProgramId]);
+
+  useEffect(() => {
+    const nextConfig: Record<string, { microIndexOn: boolean; weighted: string }> = {};
+    (selectedEventTypeData?.analysisTypes || []).forEach((analysisType) => {
+      nextConfig[analysisType.id] = {
+        microIndexOn: Boolean(analysisType.microIndexOn),
+        weighted:
+          analysisType.weighted === null || analysisType.weighted === undefined
+            ? ""
+            : String(analysisType.weighted),
+      };
+    });
+    setAnalysisPtsConfig(nextConfig);
+  }, [selectedEventTypeData]);
 
   const loadData = async () => {
     try {
@@ -205,7 +218,9 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
   const handleAssociateAnalysisType = async (analysisTypeId: string) => {
     if (!selectedEventType || !selectedEventTypeData || !analysisTypeId) return;
     try {
-      await associateAnalysisTypeToMicroType(selectedEventType, analysisTypeId);
+      const existingAnalysisTypeIds = (selectedEventTypeData.analysisTypes || []).map((at) => at.id);
+      const allAnalysisTypeIds = Array.from(new Set([...existingAnalysisTypeIds, analysisTypeId]));
+      await updateMicroTypeAnalysisTypes(selectedEventType, allAnalysisTypeIds);
       showSuccess("Tipo de análisis asociado", "El tipo de análisis se ha asociado correctamente.");
       
       // Actualizar el estado local sin recargar todo
@@ -217,7 +232,6 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
         });
         setSelectedAnalysisType(""); // Resetear el selector
       }
-      onRefreshAnalysisTypes?.();
     } catch (error) {
       showError("Error al asociar tipo de análisis", error);
     }
@@ -226,7 +240,7 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
   const handleDisassociateAnalysisType = async (analysisTypeId: string) => {
     if (!selectedEventType || !selectedEventTypeData) return;
     try {
-      await disassociateAnalysisTypeFromMicroType(selectedEventType, analysisTypeId);
+      await removeAnalysisTypeFromMicroType(selectedEventType, analysisTypeId);
       showSuccess("Tipo de análisis desasociado", "El tipo de análisis se ha desasociado correctamente.");
       
       // Actualizar el estado local sin recargar todo
@@ -236,9 +250,77 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
           analysisTypes: (selectedEventTypeData.analysisTypes || []).filter(at => at.id !== analysisTypeId),
         });
       }
-      onRefreshAnalysisTypes?.();
     } catch (error) {
       showError("Error al desasociar tipo de análisis", error);
+    }
+  };
+
+  const handlePtsOnChange = async (analysisTypeId: string, value: "on" | "off") => {
+    const microIndexOn = value === "on";
+    const current = analysisPtsConfig[analysisTypeId] ?? { microIndexOn: false, weighted: "" };
+
+    setAnalysisPtsConfig((prev) => ({
+      ...prev,
+      [analysisTypeId]: { ...current, microIndexOn },
+    }));
+
+    if (!microIndexOn) {
+      await handleSaveAnalysisPtsConfig(analysisTypeId, { microIndexOn: false, weighted: "0" });
+    }
+  };
+
+  const handleSaveAnalysisPtsConfig = async (
+    analysisTypeId: string,
+    override?: { microIndexOn: boolean; weighted: string }
+  ) => {
+    if (!selectedEventType) return;
+
+    const config = override ?? analysisPtsConfig[analysisTypeId] ?? { microIndexOn: false, weighted: "" };
+    const normalizedWeighted = config.weighted.replace(",", ".");
+    const weightedValue = config.microIndexOn ? Number(normalizedWeighted) : 0;
+
+    if (config.microIndexOn) {
+      if (!normalizedWeighted.trim() || Number.isNaN(weightedValue)) {
+        showError("Ponderado inválido", new Error("Ingrese un valor numérico para el ponderado."));
+        return;
+      }
+
+      if (weightedValue < 0 || weightedValue > 1) {
+        showError("Ponderado inválido", new Error("El ponderado debe estar entre 0 y 1."));
+        return;
+      }
+    }
+
+    try {
+      setSavingAnalysisId(analysisTypeId);
+      await updateAnalysisPtsConfig(selectedEventType, {
+        analysisTypeId,
+        weighted: weightedValue,
+        microIndexOn: config.microIndexOn,
+      });
+
+      setSelectedEventTypeData((prev) =>
+        prev
+          ? {
+              ...prev,
+              analysisTypes: (prev.analysisTypes || []).map((analysisType) =>
+                analysisType.id === analysisTypeId
+                  ? {
+                      ...analysisType,
+                      microIndexOn: config.microIndexOn,
+                      weighted: config.microIndexOn ? weightedValue : 0,
+                    }
+                  : analysisType
+              ),
+            }
+          : prev
+      );
+
+      showSuccess("MicroIndex actualizado", "La configuración de MicroIndex del análisis se guardó correctamente.");
+    } catch (error) {
+      showError("Error al actualizar MicroIndex", error);
+    } finally {
+      setSavingAnalysisId(null);
     }
   };
 
@@ -268,7 +350,6 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
         setSelectedElement("");
       }
       await loadTypeProgramRelations(selectedEventType);
-      onRefreshElements?.();
     } catch (error) {
       showError("Error al asociar elemento", error);
     }
@@ -297,7 +378,6 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
         );
       }
       await loadTypeProgramRelations(selectedEventType);
-      onRefreshElements?.();
     } catch (error) {
       showError("Error al desasociar elemento", error);
     }
@@ -332,29 +412,6 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
             onValueChange={setSelectedEventType}
             placeholder="Seleccione un tipo de evento"
           />
-        </div>
-        <div className="mb-4">
-          <label htmlFor="program" className="text-sm font-medium mb-2 block">
-            Seleccionar Programa
-          </label>
-          <Select
-            value={selectedProgramId}
-            onValueChange={(value) => {
-              setSelectedProgramId(value);
-              setSelectedElement("");
-            }}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccione un programa" />
-            </SelectTrigger>
-            <SelectContent>
-              {programs.map((program) => (
-                <SelectItem key={program.id} value={program.id}>
-                  {program.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -391,24 +448,82 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
                     <TableHead className="font-semibold">Condición</TableHead>
                     <TableHead className="font-semibold">Umbral</TableHead>
                     <TableHead className="font-semibold">Código</TableHead>
+                    <TableHead className="font-semibold">MicroIndex</TableHead>
+                    <TableHead className="font-semibold">Ponderado</TableHead>
                     <TableHead className="text-right font-semibold">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {!selectedEventTypeData.analysisTypes || selectedEventTypeData.analysisTypes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                      <TableCell colSpan={8} className="text-center py-6 text-gray-500">
                         No hay tipos de análisis asociados
                       </TableCell>
                     </TableRow>
                   ) : (
-                    selectedEventTypeData.analysisTypes.map((at) => (
+                    selectedEventTypeData.analysisTypes.map((at) => {
+                      const config = analysisPtsConfig[at.id] ?? {
+                        microIndexOn: Boolean(at.microIndexOn),
+                        weighted:
+                          at.weighted === null || at.weighted === undefined ? "" : String(at.weighted),
+                      };
+
+                      return (
                       <TableRow key={at.id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50">
                         <TableCell className="font-medium">{at.name}</TableCell>
                         <TableCell>{at.options}</TableCell>
                         <TableCell>{at.condition || "-"}</TableCell>
                         <TableCell>{at.threshold || "-"}</TableCell>
                         <TableCell>{at.code}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={config.microIndexOn ? "on" : "off"}
+                            onValueChange={(value: "on" | "off") => handlePtsOnChange(at.id, value)}
+                          >
+                            <SelectTrigger className="w-[96px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="on">On</SelectItem>
+                              <SelectItem value="off">Off</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.01"
+                              value={config.weighted}
+                              onChange={(event) =>
+                                setAnalysisPtsConfig((prev) => ({
+                                  ...prev,
+                                  [at.id]: {
+                                    ...config,
+                                    weighted: event.target.value,
+                                  },
+                                }))
+                              }
+                              placeholder="0.75"
+                              className="w-[100px]"
+                              disabled={!config.microIndexOn}
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => handleSaveAnalysisPtsConfig(at.id)}
+                              disabled={
+                                savingAnalysisId === at.id ||
+                                !config.microIndexOn ||
+                                !config.weighted.trim()
+                              }
+                            >
+                              Guardar
+                            </Button>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
@@ -420,7 +535,8 @@ export function AssociationsManager({ onRefreshAnalysisTypes, onRefreshElements 
                           </Button>
                         </TableCell>
                       </TableRow>
-                    ))
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>

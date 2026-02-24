@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,7 @@ import {
   createMicroProgram,
   deleteMicroProgram,
   getMicroPrograms,
+  updateMicroProgram,
 } from "@/lib/services/micro-programs.service";
 
 interface ProgramsManagerProps {
@@ -35,7 +36,10 @@ export function ProgramsManager({ onRefresh }: ProgramsManagerProps) {
   const [programs, setPrograms] = useState<MicroProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProgramId, setEditingProgramId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [editName, setEditName] = useState("");
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -57,6 +61,18 @@ export function ProgramsManager({ onRefresh }: ProgramsManagerProps) {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setName("");
+  };
+
+  const handleOpenEditDialog = (program: MicroProgram) => {
+    setEditingProgramId(program.id);
+    setEditName(program.name);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setEditingProgramId(null);
+    setEditName("");
   };
 
   const handleCreate = async (event: React.FormEvent) => {
@@ -84,6 +100,21 @@ export function ProgramsManager({ onRefresh }: ProgramsManagerProps) {
       onRefresh?.();
     } catch (error) {
       showError("Error al eliminar programa", error);
+    }
+  };
+
+  const handleUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editingProgramId) return;
+
+    try {
+      await updateMicroProgram(editingProgramId, { name: editName.trim() });
+      showSuccess("Programa actualizado", "El programa se ha actualizado correctamente.");
+      handleCloseEditDialog();
+      await loadPrograms();
+      onRefresh?.();
+    } catch (error) {
+      showError("Error al actualizar programa", error);
     }
   };
 
@@ -121,6 +152,13 @@ export function ProgramsManager({ onRefresh }: ProgramsManagerProps) {
                 <TableRow key={program.id}>
                   <TableCell className="font-medium">{program.name}</TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenEditDialog(program)}
+                    >
+                      <Pencil className="h-4 w-4 text-blue-500" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -163,6 +201,39 @@ export function ProgramsManager({ onRefresh }: ProgramsManagerProps) {
               </Button>
               <Button type="submit" disabled={!name.trim()}>
                 Crear
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Programa</DialogTitle>
+            <DialogDescription>
+              Modifique el nombre del programa.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div>
+              <label htmlFor="edit-program-name" className="text-sm font-medium mb-2 block">
+                Nombre *
+              </label>
+              <Input
+                id="edit-program-name"
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+                required
+                placeholder="Ej: PTS"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={handleCloseEditDialog}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={!editName.trim()}>
+                Guardar
               </Button>
             </div>
           </form>

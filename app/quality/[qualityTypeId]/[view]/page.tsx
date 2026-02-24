@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { QualityV0 } from "@/components/quality_v0/micro/events";
+import { WeeklyKpi } from "@/components/quality_v0/micro/kpi-weekly";
 import { getQualityTypeById } from "@/lib/services/quality-types.service";
 import {
   Breadcrumb,
@@ -12,7 +13,7 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
-const validViews = ["operator", "leader", "audit"] as const;
+const validViews = ["operator", "leader", "audit", "kpi-weekly"] as const;
 
 type ViewType = (typeof validViews)[number];
 
@@ -69,6 +70,7 @@ export default async function QualityTypeViewPage({
     operator: "Operación",
     leader: "Liderazgo",
     audit: "Auditoría",
+    "kpi-weekly": "KPI Semanal",
   };
   const viewTitle = viewTitleMap[view] || view.charAt(0).toUpperCase() + view.slice(1);
 
@@ -104,7 +106,11 @@ export default async function QualityTypeViewPage({
         </div>
 
         <div className="flex-1 min-h-0 flex flex-col">
-          <QualityV0 view={view as "operator" | "leader" | "audit"} qualityTypeId={id} />
+          {view === "kpi-weekly" ? (
+            <WeeklyKpi qualityTypeId={id} />
+          ) : (
+            <QualityV0 view={view as "operator" | "leader" | "audit"} qualityTypeId={id} />
+          )}
         </div>
       </div>
     </div>

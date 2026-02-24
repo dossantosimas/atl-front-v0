@@ -14,6 +14,12 @@ export interface UpdateMicroTypeDto extends Partial<CreateMicroTypeDto> {
   qualityTypeId?: number | null;
 }
 
+export interface UpdateAnalysisPtsConfigDto {
+  analysisTypeId: string;
+  weighted: number;
+  microIndexOn: boolean;
+}
+
 export async function getMicroTypes(): Promise<MicroType[]> {
   try {
     const response = await axios.get<MicroType[]>(
@@ -100,6 +106,35 @@ export async function associateAnalysisTypeToMicroType(
   }
 }
 
+export async function updateMicroTypeAnalysisTypes(
+  microTypeId: string,
+  analysisTypeIds: string[]
+): Promise<void> {
+  try {
+    await axios.patch(
+      `${env.BASE_URL}/micro-types/${microTypeId}/analysis-types`,
+      { analysisTypeIds }
+    );
+  } catch (error) {
+    console.error("Error updating micro type analysis types:", error);
+    throw error;
+  }
+}
+
+export async function removeAnalysisTypeFromMicroType(
+  microTypeId: string,
+  analysisTypeId: string
+): Promise<void> {
+  try {
+    await axios.delete(
+      `${env.BASE_URL}/micro-types/${microTypeId}/analysis-types/${analysisTypeId}`
+    );
+  } catch (error) {
+    console.error("Error removing analysis type relation from micro type:", error);
+    throw error;
+  }
+}
+
 export async function disassociateAnalysisTypeFromMicroType(
   microTypeId: string,
   analysisTypeId: string
@@ -119,6 +154,21 @@ export async function disassociateAnalysisTypeFromMicroType(
     );
   } catch (error) {
     console.error("Error disassociating analysis type from micro type:", error);
+    throw error;
+  }
+}
+
+export async function updateAnalysisPtsConfig(
+  microTypeId: string,
+  data: UpdateAnalysisPtsConfigDto
+): Promise<void> {
+  try {
+    await axios.patch(
+      `${env.BASE_URL}/micro-types/${microTypeId}/analysis-types/weighted`,
+      data
+    );
+  } catch (error) {
+    console.error("Error updating analysis PTS config:", error);
     throw error;
   }
 }

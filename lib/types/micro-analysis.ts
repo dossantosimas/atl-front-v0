@@ -13,6 +13,8 @@ export interface AnalysisType {
   condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between" | null;
   threshold: string | null;
   code: string;
+  weighted?: number | null;
+  microIndexOn?: boolean;
   events?: AnalysisTypeEvent[];
 }
 

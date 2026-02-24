@@ -6,6 +6,10 @@ export interface CreateMicroProgramDto {
   name: string;
 }
 
+export interface UpdateMicroProgramDto {
+  name: string;
+}
+
 export async function getMicroPrograms(): Promise<MicroProgram[]> {
   try {
     const response = await axios.get<MicroProgram[]>(
@@ -54,6 +58,22 @@ export async function deleteMicroProgram(id: string): Promise<void> {
     await axios.delete(`${env.BASE_URL}/micro-programs/${id}`);
   } catch (error) {
     console.error("Error deleting micro program:", error);
+    throw error;
+  }
+}
+
+export async function updateMicroProgram(
+  id: string,
+  data: UpdateMicroProgramDto
+): Promise<MicroProgram> {
+  try {
+    const response = await axios.patch<MicroProgram>(
+      `${env.BASE_URL}/micro-programs/${id}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating micro program:", error);
     throw error;
   }
 }

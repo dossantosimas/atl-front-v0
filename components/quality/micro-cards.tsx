@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { User, Users } from "lucide-react";
+import { ChartColumn, User, Users } from "lucide-react";
 
 interface MicroCard {
   id: string;
   name: string;
   description: string;
   href: string;
-  icon: typeof User | typeof Users;
+  icon: typeof User | typeof Users | typeof ChartColumn;
   color: string;
   hoverColor: string;
 }
@@ -31,6 +31,15 @@ const microCards: MicroCard[] = [
     icon: Users,
     color: "bg-[#FE941E]",
     hoverColor: "hover:bg-[#EBA600]",
+  },
+  {
+    id: "kpi-weekly",
+    name: "KPI Semanal",
+    description: "Consolidado semanal del MicroIndex por indicador",
+    href: "kpi-weekly",
+    icon: ChartColumn,
+    color: "bg-[#0B8F6A]",
+    hoverColor: "hover:bg-[#087558]",
   },
 ];
 

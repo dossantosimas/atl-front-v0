@@ -129,11 +129,7 @@ export default function ConfigPage() {
               </TabsContent>
 
               <TabsContent value="associations" className="mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto pb-4">
-                <AssociationsManager
-                  key={refreshKey}
-                  onRefreshAnalysisTypes={handleRefreshAnalysisTypes}
-                  onRefreshElements={handleRefreshElements}
-                />
+                <AssociationsManager key={refreshKey} />
               </TabsContent>
             </Tabs>
           </div>
