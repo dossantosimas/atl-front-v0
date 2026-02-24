@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,7 @@ interface DailyMetric {
   total: number;
   badPct: number;
   ptsLost: number;
+  groupPtsLost?: number;
 }
 
 interface PiRow {
@@ -39,6 +40,8 @@ interface PiRow {
   typeName: string;
   ponderation: number;
   byDate: Record<string, DailyMetric>;
+  isFirstInGroup?: boolean;
+  groupRowCount?: number;
 }
 
 interface FlatAnalysis {
@@ -89,13 +92,13 @@ function getMode(values: number[]): number {
 
 function getGroupRowShadeClass(groupName: string): string {
   const palette = [
-    "bg-blue-50/70 dark:bg-blue-950/25",
-    "bg-emerald-50/70 dark:bg-emerald-950/25",
-    "bg-amber-50/70 dark:bg-amber-950/25",
-    "bg-violet-50/70 dark:bg-violet-950/25",
-    "bg-cyan-50/70 dark:bg-cyan-950/25",
-    "bg-rose-50/70 dark:bg-rose-950/25",
-    "bg-lime-50/70 dark:bg-lime-950/25",
+    "bg-blue-50 dark:bg-blue-900",
+    "bg-emerald-50 dark:bg-emerald-900",
+    "bg-amber-50 dark:bg-amber-900",
+    "bg-violet-50 dark:bg-violet-900",
+    "bg-cyan-50 dark:bg-cyan-900",
+    "bg-rose-50 dark:bg-rose-900",
+    "bg-lime-50 dark:bg-lime-900",
   ];
 
   const normalized = groupName.toLowerCase();
@@ -150,9 +153,8 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
       const compliant = entriesByDate.reduce((sum, item) => sum + item.compliantCount, 0);
       const nonCompliant = entriesByDate.reduce((sum, item) => sum + item.nonCompliantCount, 0);
       const total = compliant + nonCompliant;
-      const badRatio = total > 0 ? nonCompliant / total : 0;
-      const badPct = badRatio * 100;
-      const ptsLost = ponderation * badPct;
+      const badPct = total > 0 ? (nonCompliant / total) * 100 : 0;
+      const ptsLost = ponderation * nonCompliant;
 
       byDate[dateKey] = {
         nonCompliant,
@@ -175,6 +177,24 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
     const groupSort = a.groupName.localeCompare(b.groupName, "es");
     if (groupSort !== 0) return groupSort;
     return a.typeName.localeCompare(b.typeName, "es");
+  });
+
+  // Marcar el primero de cada grupo y calcular la suma de Pts Perd por grupo
+  const groups = Array.from(new Set(rows.map(r => r.groupName)));
+  groups.forEach(groupName => {
+    const groupRows = rows.filter(r => r.groupName === groupName);
+    if (groupRows.length > 0) {
+      groupRows[0].isFirstInGroup = true;
+      groupRows[0].groupRowCount = groupRows.length;
+
+      // Calcular suma por día para este grupo
+      dateKeys.forEach(dateKey => {
+        const groupSum = groupRows.reduce((sum, row) => sum + (row.byDate[dateKey]?.ptsLost || 0), 0);
+        groupRows.forEach(row => {
+          row.byDate[dateKey].groupPtsLost = groupSum;
+        });
+      });
+    }
   });
 
   return { dateKeys, rows };
@@ -279,101 +299,84 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
             No hay datos para el año {selectedYear}, semana {selectedWeek}.
           </div>
         ) : (
-          <Table className="min-w-[1800px]">
-            <TableHeader>
+          <Table className="min-w-[1800px] text-[11px]">
+            <TableHeader className="sticky top-0 bg-white dark:bg-gray-800 z-20">
               <TableRow>
-                <TableHead rowSpan={2} className="align-middle min-w-[220px]">
+                <TableHead rowSpan={2} className="align-middle min-w-[220px] sticky left-0 bg-white dark:bg-slate-900 z-30 border-r">
                   Indicador (PI)
                 </TableHead>
-                <TableHead rowSpan={2} className="align-middle min-w-[120px]">
-                  Ponderación
+                <TableHead rowSpan={2} className="align-middle min-w-[80px] w-[80px] text-center sticky left-[220px] bg-white dark:bg-slate-900 z-30 border-r">
+                  Pond.
                 </TableHead>
                 {dateKeys.map((dateKey) => (
-                  <TableHead key={dateKey} colSpan={4} className="text-center whitespace-nowrap">
+                  <TableHead key={dateKey} colSpan={5} className="text-center whitespace-nowrap border-b">
                     {formatDateLabel(dateKey)}
                   </TableHead>
                 ))}
               </TableRow>
               <TableRow>
                 {dateKeys.map((dateKey) => (
-                  <TableHead key={`pos-${dateKey}`} className="min-w-[95px] text-center whitespace-nowrap">
-                    # Pos
-                  </TableHead>
-                ))}
-                {dateKeys.map((dateKey) => (
-                  <TableHead key={`total-${dateKey}`} className="min-w-[95px] text-center whitespace-nowrap">
-                    Total
-                  </TableHead>
-                ))}
-                {dateKeys.map((dateKey) => (
-                  <TableHead key={`bad-${dateKey}`} className="min-w-[120px] text-center whitespace-nowrap">
-                    $ con cuentas
-                  </TableHead>
-                ))}
-                {dateKeys.map((dateKey) => (
-                  <TableHead key={`pts-${dateKey}`} className="min-w-[120px] text-center whitespace-nowrap">
-                    PTS perdidos
-                  </TableHead>
+                  <React.Fragment key={`headers-${dateKey}`}>
+                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-l">
+                      # Post
+                    </TableHead>
+                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1">
+                      Total
+                    </TableHead>
+                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1">
+                      % cuentas
+                    </TableHead>
+                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1">
+                      Pts Perd
+                    </TableHead>
+                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-r">
+                      Suma G.
+                    </TableHead>
+                  </React.Fragment>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((row) => (
-                <TableRow key={`${row.groupName}-${row.typeId}`}>
-                  <TableCell className={`font-medium whitespace-nowrap ${getGroupRowShadeClass(row.groupName)}`}>
-                    {row.typeName}
+                <TableRow key={`${row.groupName}-${row.typeId}`} className="hover:bg-muted/50">
+                  <TableCell className={`font-medium whitespace-nowrap sticky left-0 z-10 border-r ${getGroupRowShadeClass(row.groupName)}`}>
+                    <span className="opacity-70 text-[9px] block uppercase tracking-wider">{row.groupName}</span>
+                    <span>{row.typeName}</span>
                   </TableCell>
-                  <TableCell>{row.ponderation.toFixed(2)}</TableCell>
+                  <TableCell className="text-center sticky left-[220px] bg-white dark:bg-slate-900 z-10 border-r">
+                    {row.ponderation.toFixed(2)}
+                  </TableCell>
                   {dateKeys.map((dateKey) => {
                     const metric = row.byDate[dateKey] || {
                       nonCompliant: 0,
                       total: 0,
                       badPct: 0,
                       ptsLost: 0,
+                      groupPtsLost: 0,
                     };
                     return (
-                      <TableCell key={`pos-${row.groupName}-${row.typeId}-${dateKey}`} className="text-center">
-                        {metric.nonCompliant.toFixed(2)}
-                      </TableCell>
-                    );
-                  })}
-                  {dateKeys.map((dateKey) => {
-                    const metric = row.byDate[dateKey] || {
-                      nonCompliant: 0,
-                      total: 0,
-                      badPct: 0,
-                      ptsLost: 0,
-                    };
-                    return (
-                      <TableCell key={`total-${row.groupName}-${row.typeId}-${dateKey}`} className="text-center">
-                        {metric.total.toFixed(2)}
-                      </TableCell>
-                    );
-                  })}
-                  {dateKeys.map((dateKey) => {
-                    const metric = row.byDate[dateKey] || {
-                      nonCompliant: 0,
-                      total: 0,
-                      badPct: 0,
-                      ptsLost: 0,
-                    };
-                    return (
-                      <TableCell key={`bad-${row.groupName}-${row.typeId}-${dateKey}`} className="text-center">
-                        {metric.badPct.toFixed(2)}%
-                      </TableCell>
-                    );
-                  })}
-                  {dateKeys.map((dateKey) => {
-                    const metric = row.byDate[dateKey] || {
-                      nonCompliant: 0,
-                      total: 0,
-                      badPct: 0,
-                      ptsLost: 0,
-                    };
-                    return (
-                      <TableCell key={`pts-${row.groupName}-${row.typeId}-${dateKey}`} className="text-center">
-                        {metric.ptsLost.toFixed(2)}
-                      </TableCell>
+                      <React.Fragment key={`metrics-${row.groupName}-${row.typeId}-${dateKey}`}>
+                        <TableCell className="text-center px-1 border-l">
+                          {metric.nonCompliant.toFixed(0)}
+                        </TableCell>
+                        <TableCell className="text-center px-1">
+                          {metric.total.toFixed(0)}
+                        </TableCell>
+                        <TableCell className="text-center px-1">
+                          {metric.badPct.toFixed(2)}%
+                        </TableCell>
+                        <TableCell className="text-center px-1">
+                          {metric.ptsLost.toFixed(2)}
+                        </TableCell>
+                        {row.isFirstInGroup ? (
+                          <TableCell 
+                            rowSpan={row.groupRowCount} 
+                            className="text-center px-1 border-r bg-muted/30 font-bold align-middle"
+                          >
+                            {metric.groupPtsLost?.toFixed(2)}
+                          </TableCell>
+                        ) : null}
+                      </React.Fragment>
                     );
                   })}
                 </TableRow>
