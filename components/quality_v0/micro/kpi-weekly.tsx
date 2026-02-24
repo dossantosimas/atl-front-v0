@@ -14,6 +14,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -34,12 +35,21 @@ interface DailyMetric {
   groupPtsLost?: number;
 }
 
+interface WeeklyMetric {
+  nonCompliant: number;
+  total: number;
+  badPct: number; // En el consolidado sera total - nonCompliant segun instruccion
+  ptsLost: number;
+  groupPtsLost?: number;
+}
+
 interface PiRow {
   groupName: string;
   typeId: string;
   typeName: string;
   ponderation: number;
   byDate: Record<string, DailyMetric>;
+  weekly: WeeklyMetric;
   isFirstInGroup?: boolean;
   groupRowCount?: number;
 }
@@ -148,6 +158,10 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
     const ponderation = getMode(entries.map((item) => item.averageWeighted));
     const byDate: Record<string, DailyMetric> = {};
 
+    let weeklyNonCompliant = 0;
+    let weeklyTotal = 0;
+    let weeklyPtsLost = 0;
+
     dateKeys.forEach((dateKey) => {
       const entriesByDate = entries.filter((item) => item.date === dateKey);
       const compliant = entriesByDate.reduce((sum, item) => sum + item.compliantCount, 0);
@@ -162,6 +176,10 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
         badPct,
         ptsLost,
       };
+
+      weeklyNonCompliant += nonCompliant;
+      weeklyTotal += total;
+      weeklyPtsLost += ptsLost;
     });
 
     return {
@@ -170,6 +188,12 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
       typeName,
       ponderation,
       byDate,
+      weekly: {
+        nonCompliant: weeklyNonCompliant,
+        total: weeklyTotal,
+        badPct: weeklyTotal - weeklyNonCompliant, // total - # Pos segun instruccion
+        ptsLost: weeklyPtsLost,
+      },
     };
   });
 
@@ -179,26 +203,49 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
     return a.typeName.localeCompare(b.typeName, "es");
   });
 
+  const dailyTotalIndex: Record<string, number> = {};
+  dateKeys.forEach((dateKey) => {
+    dailyTotalIndex[dateKey] = 1;
+  });
+  let weeklyTotalIndexValue = 1;
+
   // Marcar el primero de cada grupo y calcular la suma de Pts Perd por grupo
-  const groups = Array.from(new Set(rows.map(r => r.groupName)));
-  groups.forEach(groupName => {
-    const groupRows = rows.filter(r => r.groupName === groupName);
+  const groups = Array.from(new Set(rows.map((r) => r.groupName)));
+  groups.forEach((groupName) => {
+    const groupRows = rows.filter((r) => r.groupName === groupName);
     if (groupRows.length > 0) {
       groupRows[0].isFirstInGroup = true;
       groupRows[0].groupRowCount = groupRows.length;
 
       // Calcular suma por día para este grupo
-      dateKeys.forEach(dateKey => {
+      dateKeys.forEach((dateKey) => {
         const groupSum = groupRows.reduce((sum, row) => sum + (row.byDate[dateKey]?.ptsLost || 0), 0);
         const finalIndex = groupSum > 100 ? 0 : 100 - groupSum;
-        groupRows.forEach(row => {
+        groupRows.forEach((row) => {
           row.byDate[dateKey].groupPtsLost = finalIndex;
         });
+
+        // Acumular para el total del día: (indice1/100 * indice2/100 ...)
+        dailyTotalIndex[dateKey] *= finalIndex / 100;
       });
+
+      // Calcular suma semanal para este grupo
+      const weeklyGroupSum = groupRows.reduce((sum, row) => sum + row.weekly.ptsLost, 0);
+      const weeklyFinalIndex = weeklyGroupSum > 100 ? 0 : 100 - weeklyGroupSum;
+      groupRows.forEach((row) => {
+        row.weekly.groupPtsLost = weeklyFinalIndex;
+      });
+      weeklyTotalIndexValue *= weeklyFinalIndex / 100;
     }
   });
 
-  return { dateKeys, rows };
+  // Convertir a porcentaje final
+  dateKeys.forEach((dateKey) => {
+    dailyTotalIndex[dateKey] *= 100;
+  });
+  const weeklyTotalIndex = weeklyTotalIndexValue * 100;
+
+  return { dateKeys, rows, dailyTotalIndex, weeklyTotalIndex };
 }
 
 export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
@@ -223,7 +270,7 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
     return Array.from({ length: 53 }, (_, index) => index + 1);
   }, []);
 
-  const { dateKeys, rows } = useMemo(() => parseWeeklyKpi(rawData), [rawData]);
+  const { dateKeys, rows, dailyTotalIndex, weeklyTotalIndex } = useMemo(() => parseWeeklyKpi(rawData), [rawData]);
 
   const handleSearch = async () => {
     try {
@@ -314,6 +361,9 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                     {formatDateLabel(dateKey)}
                   </TableHead>
                 ))}
+                <TableHead colSpan={5} className="text-center whitespace-nowrap border-b bg-slate-50 dark:bg-slate-900/50">
+                  Consolidado Semanal
+                </TableHead>
               </TableRow>
               <TableRow>
                 {dateKeys.map((dateKey) => (
@@ -330,11 +380,26 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                     <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1">
                       Pts Perd
                     </TableHead>
-                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-r">
+                    <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-r bg-slate-100 dark:bg-slate-800 font-bold">
                       Indice de la seccion
                     </TableHead>
                   </React.Fragment>
                 ))}
+                <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-l bg-slate-50 dark:bg-slate-900/50">
+                  # Post
+                </TableHead>
+                <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 bg-slate-50 dark:bg-slate-900/50">
+                  Total
+                </TableHead>
+                <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 bg-slate-50 dark:bg-slate-900/50">
+                  % cuentas
+                </TableHead>
+                <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 bg-slate-50 dark:bg-slate-900/50">
+                  Pts Perd
+                </TableHead>
+                <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-r bg-slate-200 dark:bg-slate-700 font-bold">
+                  Indice de la seccion
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -372,7 +437,7 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                         {row.isFirstInGroup ? (
                           <TableCell 
                             rowSpan={row.groupRowCount} 
-                            className="text-center px-1 border-r bg-muted/30 font-bold align-middle"
+                            className="text-center px-1 border-r bg-slate-200 dark:bg-slate-700 font-bold align-middle text-slate-900 dark:text-slate-100"
                           >
                             {metric.groupPtsLost?.toFixed(2)}
                           </TableCell>
@@ -380,9 +445,54 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                       </React.Fragment>
                     );
                   })}
+                  {/* Celdas de Consolidado Semanal */}
+                  <TableCell className="text-center px-1 border-l bg-slate-50/50 dark:bg-slate-900/20">
+                    {row.weekly.nonCompliant.toFixed(0)}
+                  </TableCell>
+                  <TableCell className="text-center px-1 bg-slate-50/50 dark:bg-slate-900/20">
+                    {row.weekly.total.toFixed(0)}
+                  </TableCell>
+                  <TableCell className="text-center px-1 bg-slate-50/50 dark:bg-slate-900/20">
+                    {row.weekly.badPct.toFixed(0)}
+                  </TableCell>
+                  <TableCell className="text-center px-1 bg-slate-50/50 dark:bg-slate-900/20">
+                    {row.weekly.ptsLost.toFixed(2)}
+                  </TableCell>
+                  {row.isFirstInGroup ? (
+                    <TableCell 
+                      rowSpan={row.groupRowCount} 
+                      className="text-center px-1 border-r bg-slate-300 dark:bg-slate-600 font-bold align-middle text-slate-900 dark:text-white"
+                    >
+                      {row.weekly.groupPtsLost?.toFixed(2)}
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))}
             </TableBody>
+            <TableFooter className="sticky bottom-0 bg-white dark:bg-slate-900 z-20 font-bold">
+              <TableRow>
+                <TableCell className="sticky left-0 bg-white dark:bg-slate-900 z-30 border-r" colSpan={2}>
+                  Indice Total Diario
+                </TableCell>
+                {dateKeys.map((dateKey) => (
+                  <React.Fragment key={`footer-${dateKey}`}>
+                    <TableCell className="text-center border-l" colSpan={4}>
+                      -
+                    </TableCell>
+                    <TableCell className="text-center border-r bg-slate-300 dark:bg-slate-600 text-slate-900 dark:text-white">
+                      {dailyTotalIndex[dateKey]?.toFixed(2)}
+                    </TableCell>
+                  </React.Fragment>
+                ))}
+                {/* Footer Consolidado Semanal */}
+                <TableCell className="text-center border-l bg-slate-100 dark:bg-slate-800" colSpan={4}>
+                  -
+                </TableCell>
+                <TableCell className="text-center border-r bg-slate-400 dark:bg-slate-500 text-white font-black">
+                  {weeklyTotalIndex.toFixed(2)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         )}
       </div>
