@@ -190,8 +190,9 @@ function parseWeeklyKpi(days: MicroIndexWeekDay[]): { dateKeys: string[]; rows: 
       // Calcular suma por día para este grupo
       dateKeys.forEach(dateKey => {
         const groupSum = groupRows.reduce((sum, row) => sum + (row.byDate[dateKey]?.ptsLost || 0), 0);
+        const finalIndex = groupSum > 100 ? 0 : 100 - groupSum;
         groupRows.forEach(row => {
-          row.byDate[dateKey].groupPtsLost = groupSum;
+          row.byDate[dateKey].groupPtsLost = finalIndex;
         });
       });
     }
@@ -330,7 +331,7 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                       Pts Perd
                     </TableHead>
                     <TableHead className="min-w-[65px] w-[65px] text-center whitespace-nowrap text-[9px] px-1 border-r">
-                      Suma G.
+                      Indice de la seccion
                     </TableHead>
                   </React.Fragment>
                 ))}
