@@ -285,6 +285,7 @@ export function EventsTable({
       cell: ({ row }) => {
         const event = row.original;
         const count = event.analysisCount || 0;
+        const hasConfirm = event.sampleconfirm !== null && event.sampleconfirm !== "";
         
         return (
           <div className="flex items-center gap-2">
@@ -300,8 +301,14 @@ export function EventsTable({
                 setSelectedAnalysisEvent(event);
                 setAnalysisModalOpen(true);
               }}
-              disabled={!eventTypeId}
-              title={eventTypeId ? "Ver y gestionar análisis" : "Selecciona un tipo de evento primero"}
+              disabled={!eventTypeId || !hasConfirm}
+              title={
+                !eventTypeId 
+                  ? "Selecciona un tipo de evento primero" 
+                  : !hasConfirm 
+                  ? "El evento debe estar confirmado para agregar análisis" 
+                  : "Ver y gestionar análisis"
+              }
             >
               <FlaskConical className="h-4 w-4" />
             </Button>
@@ -372,6 +379,10 @@ export function EventsTable({
     setAnalysisModalOpen(open);
     if (!open) {
       setSelectedAnalysisEvent(null);
+      // Refrescar la búsqueda para actualizar la cantidad de muestras
+      if (eventTypeId) {
+        onPageChange?.(page);
+      }
     }
   };
 
