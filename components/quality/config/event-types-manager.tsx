@@ -37,10 +37,14 @@ import {
 } from "@/components/ui/select";
 import { getQualityTypes } from "@/lib/services/quality-types.service";
 import type { QualityType } from "@/lib/types/quality-types";
+import { getAllDepartments } from "@/lib/services/departments.service";
+import type { Department } from "@/lib/types/departments";
+import { Switch } from "@/components/ui/switch";
 
 export function EventTypesManager() {
   const [eventTypes, setEventTypes] = useState<MicroType[]>([]);
   const [qualityTypes, setQualityTypes] = useState<QualityType[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingType, setEditingType] = useState<MicroType | null>(null);
@@ -50,19 +54,23 @@ export function EventTypesManager() {
     end: "",
     description: "",
     qualityTypeId: "",
+    departmentId: "",
+    belongsToMicroIndex: false,
+    microIndexGroup: "",
   });
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
-    loadEventTypes();
+    loadData();
   }, []);
 
-  const loadEventTypes = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const [types, qTypes] = await Promise.all([
+      const [types, qTypes, depts] = await Promise.all([
         getMicroTypes(),
         getQualityTypes(),
+        getAllDepartments(),
       ]);
       // No necesitamos normalizar, la API ya devuelve qualityType como objeto o null
       // Solo establecemos qualityTypeId para uso interno si no existe
@@ -74,8 +82,9 @@ export function EventTypesManager() {
       });
       setEventTypes(normalizedTypes as MicroType[]);
       setQualityTypes(qTypes);
+      setDepartments(depts);
     } catch (error) {
-      showError("Error al cargar tipos de eventos", error);
+      showError("Error al cargar datos", error);
     } finally {
       setLoading(false);
     }
@@ -89,12 +98,16 @@ export function EventTypesManager() {
       const endValue = type.end.replace(/h$/, "");
       // Obtener qualityTypeId del objeto qualityType si existe, o del campo directo
       const qualityTypeIdValue = type.qualityType?.id || type.qualityTypeId;
+      const departmentIdValue = type.department?.id || type.departmentId;
       setFormData({
         name: type.name,
         start: startValue,
         end: endValue,
         description: type.description,
         qualityTypeId: qualityTypeIdValue?.toString() || "",
+        departmentId: departmentIdValue?.toString() || "",
+        belongsToMicroIndex: type.belongsToMicroIndex || false,
+        microIndexGroup: type.microIndexGroup || "",
       });
     } else {
       setEditingType(null);
@@ -104,6 +117,9 @@ export function EventTypesManager() {
         end: "",
         description: "",
         qualityTypeId: "",
+        departmentId: "",
+        belongsToMicroIndex: false,
+        microIndexGroup: "",
       });
     }
     setIsDialogOpen(true);
@@ -118,12 +134,16 @@ export function EventTypesManager() {
       end: "",
       description: "",
       qualityTypeId: "",
+      departmentId: "",
+      belongsToMicroIndex: false,
+      microIndexGroup: "",
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setLoading(true);
       // Agregar "h" al final de start y end antes de enviar al API
       const dataToSend: any = {
         name: formData.name,
@@ -141,29 +161,40 @@ export function EventTypesManager() {
           // Si no hay selección (o es "none"), enviar null para quitar la relación
           dataToSend.qualityTypeId = null;
         }
+
+        // DepartmentId
+        if (formData.departmentId && formData.departmentId !== "none") {
+          dataToSend.departmentId = parseInt(formData.departmentId, 10);
+        } else {
+          dataToSend.departmentId = null;
+        }
       } else {
         // Al crear, solo enviar si hay uno seleccionado
         if (formData.qualityTypeId && formData.qualityTypeId !== "none") {
           dataToSend.qualityTypeId = parseInt(formData.qualityTypeId, 10);
         }
+        if (formData.departmentId && formData.departmentId !== "none") {
+          dataToSend.departmentId = parseInt(formData.departmentId, 10);
+        }
       }
       
       if (editingType) {
         console.log("Actualizando micro_type con datos:", dataToSend);
-        await updateMicroType(editingType.id, dataToSend);
+        const updatedType = await updateMicroType(editingType.id, dataToSend);
+        setEventTypes(prev => prev.map(t => t.id === editingType.id ? updatedType : t));
         showSuccess("Tipo de evento actualizado", "El tipo de evento se ha actualizado correctamente.");
       } else {
         console.log("Creando micro_type con datos:", dataToSend);
-        await createMicroType(dataToSend);
+        const newType = await createMicroType(dataToSend);
+        setEventTypes(prev => [...prev, newType]);
         showSuccess("Tipo de evento creado", "El tipo de evento se ha creado correctamente.");
       }
       handleCloseDialog();
-      await loadEventTypes();
     } catch (error: any) {
       console.error("Error completo al guardar:", error);
-      console.error("Error response:", error?.response);
-      console.error("Error response data:", error?.response?.data);
       showError("Error al guardar tipo de evento", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -172,11 +203,14 @@ export function EventTypesManager() {
       return;
     }
     try {
+      setLoading(true);
       await deleteMicroType(id);
+      setEventTypes(prev => prev.filter(t => t.id !== id));
       showSuccess("Tipo de evento eliminado", "El tipo de evento se ha eliminado correctamente.");
-      loadEventTypes();
     } catch (error) {
       showError("Error al eliminar tipo de evento", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -203,13 +237,14 @@ export function EventTypesManager() {
               <TableHead>Fin</TableHead>
               <TableHead>Descripción</TableHead>
               <TableHead>Tipo de Calidad</TableHead>
+              <TableHead>Departamento</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
               {eventTypes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     No hay tipos de eventos registrados
                   </TableCell>
                 </TableRow>
@@ -217,6 +252,7 @@ export function EventTypesManager() {
                 eventTypes.map((type) => {
                   // El API devuelve qualityType como objeto { id, name } o null
                   const qualityTypeName = type.qualityType?.name || "-";
+                  const departmentName = type.department?.name || "-";
                   return (
                     <TableRow key={type.id}>
                       <TableCell className="font-medium">{type.name}</TableCell>
@@ -224,25 +260,26 @@ export function EventTypesManager() {
                       <TableCell>{type.end}</TableCell>
                       <TableCell className="max-w-xs truncate">{type.description}</TableCell>
                       <TableCell>{qualityTypeName}</TableCell>
+                      <TableCell>{departmentName}</TableCell>
                       <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenDialog(type)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(type.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleOpenDialog(type)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(type.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
@@ -345,7 +382,30 @@ export function EventTypesManager() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex justify-end gap-2">
+
+            <div>
+              <label htmlFor="departmentId" className="text-sm font-medium mb-2 block">
+                Departamento
+              </label>
+              <Select
+                value={formData.departmentId || "none"}
+                onValueChange={(value) => setFormData({ ...formData, departmentId: value === "none" ? "" : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un departamento (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin departamento</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={handleCloseDialog}>
                 Cancelar
               </Button>

@@ -41,6 +41,15 @@ const microCards: MicroCard[] = [
     color: "bg-[#0B8F6A]",
     hoverColor: "hover:bg-[#087558]",
   },
+  {
+    id: "kpi-monthly",
+    name: "KPI Mensual",
+    description: "Consolidado mensual del MicroIndex por indicador",
+    href: "kpi-monthly",
+    icon: ChartColumn,
+    color: "bg-[#8B5CF6]",
+    hoverColor: "hover:bg-[#7C3AED]",
+  },
 ];
 
 interface MicroCardsProps {

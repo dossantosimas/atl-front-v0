@@ -44,3 +44,21 @@ export async function getMicroIndexWeekBudget(): Promise<MicroIndexBudgetGroup[]
   }
 }
 
+export async function getMicroIndexMonth(
+  year: number,
+  month: number
+): Promise<MicroIndexWeekDay[]> {
+  try {
+    const response = await axios.get<MicroIndexWeekDay[]>(
+      `${env.BASE_URL}/microindex_month`,
+      {
+        params: { year, month },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching monthly micro index KPI:", error);
+    throw error;
+  }
+}
+

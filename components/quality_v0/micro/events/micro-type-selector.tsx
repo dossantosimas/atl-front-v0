@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getMicroTypes } from "@/lib/services/micro-types.service";
 import type { MicroType } from "@/lib/types/micro-types";
+import { useToast } from "@/components/toast";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/toast";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface MicroTypeSelectorProps {
   value?: string;
@@ -29,7 +31,8 @@ export function MicroTypeSelector({
 }: MicroTypeSelectorProps) {
   const [microTypes, setMicroTypes] = useState<MicroType[]>([]);
   const [loading, setLoading] = useState(true);
-  const { showSuccess, showError } = useToast();
+  const [searchTerm, setSearch] = useState("");
+  const { showError } = useToast();
 
   useEffect(() => {
     // Si se pasan microTypes desde el padre, usarlos directamente
@@ -52,7 +55,6 @@ export function MicroTypeSelector({
         } else {
           setMicroTypes(data);
         }
-        // No mostrar toast cuando se pasan desde el padre
       } catch (err) {
         showError("Error al cargar tipos de eventos", err);
       } finally {
@@ -61,37 +63,52 @@ export function MicroTypeSelector({
     }
 
     fetchMicroTypes();
-  }, [showSuccess, showError, qualityTypeId, externalMicroTypes]);
+  }, [qualityTypeId, externalMicroTypes, showError]);
+
+  const filteredMicroTypes = useMemo(() => {
+    if (!searchTerm) return microTypes;
+    const s = searchTerm.toLowerCase().trim();
+    return microTypes.filter(
+      (t) =>
+        t.description.toLowerCase().includes(s) ||
+        t.name.toLowerCase().includes(s)
+    );
+  }, [microTypes, searchTerm]);
 
   return (
     <div className="w-full">
-      {loading ? (
-        <Select disabled>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Cargando..." />
-          </SelectTrigger>
-        </Select>
-      ) : microTypes.length === 0 ? (
-        <Select disabled>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="No hay tipos disponibles" />
-          </SelectTrigger>
-        </Select>
-      ) : (
-        <Select value={value} onValueChange={onValueChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent>
-            {microTypes.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
-                {type.description}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
+      <Select value={value} onValueChange={onValueChange} disabled={loading || microTypes.length === 0}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder={loading ? "Cargando..." : microTypes.length === 0 ? "No hay tipos disponibles" : placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <div className="p-2 sticky top-0 bg-popover z-10 border-b">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar tipo..."
+                value={searchTerm}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-9"
+                onKeyDown={(e) => e.stopPropagation()} // Evitar que el Select se cierre al presionar espacio
+              />
+            </div>
+          </div>
+          <div className="max-h-[200px] overflow-y-auto">
+            {filteredMicroTypes.length === 0 ? (
+              <div className="p-4 text-sm text-center text-muted-foreground">
+                No se encontraron resultados
+              </div>
+            ) : (
+              filteredMicroTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.description}
+                </SelectItem>
+              ))
+            )}
+          </div>
+        </SelectContent>
+      </Select>
     </div>
   );
 }
-

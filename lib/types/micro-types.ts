@@ -12,6 +12,13 @@ export interface MicroType {
     id: number;
     name: string;
   };
+  belongsToMicroIndex?: boolean;
+  microIndexGroup?: string | null;
+  departmentId?: number | null;
+  department?: {
+    id: number;
+    name: string;
+  };
   elements?: MicroElement[];
   analysisTypes?: AnalysisType[];
 }

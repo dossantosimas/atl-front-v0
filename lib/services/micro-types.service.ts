@@ -8,10 +8,16 @@ export interface CreateMicroTypeDto {
   end: string;
   description: string;
   qualityTypeId?: number | null;
+  belongsToMicroIndex?: boolean;
+  microIndexGroup?: string | null;
+  departmentId?: number | null;
 }
 
 export interface UpdateMicroTypeDto extends Partial<CreateMicroTypeDto> {
   qualityTypeId?: number | null;
+  belongsToMicroIndex?: boolean;
+  microIndexGroup?: string | null;
+  departmentId?: number | null;
 }
 
 export interface UpdateAnalysisPtsConfigDto {
@@ -20,11 +26,14 @@ export interface UpdateAnalysisPtsConfigDto {
   microIndexOn: boolean;
 }
 
-export async function getMicroTypes(): Promise<MicroType[]> {
+export async function getMicroTypes(params?: {
+  departmentId?: number;
+  qualityTypeId?: number;
+}): Promise<MicroType[]> {
   try {
-    const response = await axios.get<MicroType[]>(
-      `${env.BASE_URL}/micro-types`
-    );
+    const response = await axios.get<MicroType[]>(`${env.BASE_URL}/micro-types`, {
+      params,
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching micro types:", error);

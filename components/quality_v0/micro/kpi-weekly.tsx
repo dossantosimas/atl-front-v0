@@ -546,47 +546,47 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                         ptsLost: 0,
                         groupPtsLost: 0,
                       };
-                      return (
-                        <React.Fragment key={`metrics-${row.groupName}-${row.typeId}-${dateKey}`}>
-                          <TableCell className="text-center px-1 border-l">
-                            {metric.details && metric.details.length > 0 ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="cursor-help underline decoration-dotted underline-offset-2 text-red-600 dark:text-red-400 font-bold">
-                                      {metric.nonCompliant.toFixed(0)}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="p-3 space-y-2 max-w-[300px]">
-                                    <p className="font-bold text-xs border-b pb-1 mb-1 uppercase">Detalles No Cumplimiento</p>
-                                    {metric.details.map((detail, idx) => (
-                                      <div key={idx} className="text-[10px] space-y-0.5 border-b border-muted last:border-0 pb-1 last:pb-0">
-                                        <div className="flex justify-between gap-2">
-                                          <span className="text-muted-foreground italic">{detail.microTypeName}</span>
-                                          <span className="font-bold">{detail.elementName}</span>
-                                        </div>
-                                        <div className="flex justify-between gap-2">
-                                          <span>Valor:</span>
-                                          <span className="text-red-500 font-bold">{detail.value}</span>
-                                        </div>
+                    return (
+                      <React.Fragment key={`metrics-${row.groupName}-${row.typeId}-${dateKey}`}>
+                        <TableCell className={`text-center px-1 border-l ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                          {metric.details && metric.details.length > 0 ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-help underline decoration-dotted underline-offset-2 text-red-600 dark:text-red-400 font-bold">
+                                    {metric.nonCompliant.toFixed(0)}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="p-3 space-y-2 max-w-[300px]">
+                                  <p className="font-bold text-xs border-b pb-1 mb-1 uppercase">Detalles No Cumplimiento</p>
+                                  {metric.details.map((detail, idx) => (
+                                    <div key={idx} className="text-[10px] space-y-0.5 border-b border-muted last:border-0 pb-1 last:pb-0">
+                                      <div className="flex justify-between gap-2">
+                                        <span className="text-muted-foreground italic">{detail.microTypeName}</span>
+                                        <span className="font-bold">{detail.elementName}</span>
                                       </div>
-                                    ))}
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ) : (
-                              metric.nonCompliant.toFixed(0)
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center px-1">
-                            {metric.total.toFixed(0)}
-                          </TableCell>
-                          <TableCell className="text-center px-1">
-                            {metric.badPct.toFixed(2)}%
-                          </TableCell>
-                          <TableCell className="text-center px-1">
-                            {metric.ptsLost.toFixed(2)}
-                          </TableCell>
+                                      <div className="flex justify-between gap-2">
+                                        <span>Valor:</span>
+                                        <span className="text-red-500 font-bold">{detail.value}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            metric.nonCompliant.toFixed(0)
+                          )}
+                        </TableCell>
+                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                          {metric.total.toFixed(0)}
+                        </TableCell>
+                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                          {metric.badPct.toFixed(2)}%
+                        </TableCell>
+                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                          {metric.ptsLost.toFixed(2)}
+                        </TableCell>
                         {row.isFirstInGroup ? (
                           <TableCell 
                             rowSpan={row.groupRowCount} 
@@ -595,22 +595,22 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                             {metric.groupPtsLost?.toFixed(2)}
                           </TableCell>
                         ) : null}
-                        </React.Fragment>
-                      );
+                      </React.Fragment>
+                    );
                     })}
-                    {/* Celdas de Consolidado Semanal */}
-                    <TableCell className="text-center px-1 border-l bg-slate-50/50 dark:bg-slate-900/20">
-                      {row.weekly.nonCompliant.toFixed(0)}
-                    </TableCell>
-                    <TableCell className="text-center px-1 bg-slate-50/50 dark:bg-slate-900/20">
-                      {row.weekly.total.toFixed(0)}
-                    </TableCell>
-                    <TableCell className="text-center px-1 bg-slate-50/50 dark:bg-slate-900/20">
-                      {row.weekly.badPct.toFixed(0)}
-                    </TableCell>
-                    <TableCell className="text-center px-1 bg-slate-50/50 dark:bg-slate-900/20">
-                      {row.weekly.ptsLost.toFixed(2)}
-                    </TableCell>
+                  {/* Celdas de Consolidado Semanal */}
+                  <TableCell className={`text-center px-1 border-l bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                    {row.weekly.nonCompliant.toFixed(0)}
+                  </TableCell>
+                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                    {row.weekly.total.toFixed(0)}
+                  </TableCell>
+                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                    {row.weekly.badPct.toFixed(0)}
+                  </TableCell>
+                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                    {row.weekly.ptsLost.toFixed(2)}
+                  </TableCell>
                   {row.isFirstInGroup ? (
                     <TableCell 
                       rowSpan={row.groupRowCount} 

@@ -15,6 +15,13 @@ import { Button } from "@/components/ui/button";
 import { StatsCards } from "./stats-cards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GeneralChart } from "./general-chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const MONTHS: Record<string, string> = {
   "01": "Enero",
@@ -36,11 +43,15 @@ interface QualityV0Props {
   qualityTypeId?: number; // ID del quality-type para filtrar micro-types
 }
 
+import { getAllDepartments } from "@/lib/services/departments.service";
+import type { Department } from "@/lib/types/departments";
+
 export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: undefined, qualityTypeId: undefined }) {
   const [selectedEventType, setSelectedEventType] = useState<string | undefined>();
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>();
   const [selectedWeek, setSelectedWeek] = useState<string | undefined>();
   const [selectedYear, setSelectedYear] = useState<number | undefined>(new Date().getFullYear());
+  const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>();
   const [events, setEvents] = useState<MicroEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,28 +59,50 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
   const [total, setTotal] = useState(0);
   const [serverTime, setServerTime] = useState<Date | null>(null);
   const [microTypes, setMicroTypes] = useState<MicroType[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
-    async function loadMicroTypes() {
+    async function loadInitialData() {
       try {
-        const types = await getMicroTypes();
-        // Si hay qualityTypeId, filtrar los micro-types por ese quality-type
-        if (qualityTypeId !== undefined) {
-          const filteredTypes = types.filter(type => 
-            type.qualityType?.id === qualityTypeId || type.qualityTypeId === qualityTypeId
-          );
-          setMicroTypes(filteredTypes);
-        } else {
-          setMicroTypes(types);
-        }
+        const [types, depts] = await Promise.all([
+          getMicroTypes({ qualityTypeId }),
+          getAllDepartments()
+        ]);
+        setMicroTypes(types);
+        setDepartments(depts);
       } catch (error) {
-        console.error("Error loading micro types:", error);
+        console.error("Error loading initial data:", error);
       }
     }
-    loadMicroTypes();
+    loadInitialData();
   }, [qualityTypeId]);
+
+  // Refrescar microTypes cuando cambie el departamento
+  useEffect(() => {
+    async function refreshMicroTypes() {
+      try {
+        const params: any = { qualityTypeId };
+        if (selectedDepartment && selectedDepartment !== "all") {
+          params.departmentId = parseInt(selectedDepartment, 10);
+        }
+        const types = await getMicroTypes(params);
+        setMicroTypes(types);
+        
+        // Si el tipo seleccionado ya no está en la lista filtrada, deseleccionarlo
+        if (selectedEventType && !types.some(t => t.id === selectedEventType)) {
+          setSelectedEventType(undefined);
+        }
+      } catch (error) {
+        console.error("Error refreshing micro types:", error);
+      }
+    }
+    
+    if (qualityTypeId !== undefined) {
+      refreshMicroTypes();
+    }
+  }, [selectedDepartment, qualityTypeId]);
 
   const getEventTypeName = () => {
     if (!selectedEventType) return undefined;
@@ -180,7 +213,27 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
             <StatsCards events={events} serverTime={serverTime} onTimeUpdate={handleServerTimeUpdate} />
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 lg:p-6 flex-shrink-0">
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-end">
+                <div className="w-full sm:w-48">
+                  <label className="text-xs text-muted-foreground mb-1 block">departamento</label>
+                  <Select
+                    value={selectedDepartment || "all"}
+                    onValueChange={(value) => setSelectedDepartment(value === "all" ? undefined : value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Todos los departamentos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los departamentos</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id.toString()}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex-1">
+                  <label className="text-xs text-muted-foreground mb-1 block">tipo de evento</label>
                   <MicroTypeSelector
                     value={selectedEventType}
                     onValueChange={setSelectedEventType}
@@ -263,7 +316,27 @@ export function QualityV0({ view, qualityTypeId }: QualityV0Props = { view: unde
       
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 flex-shrink-0">
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+          <div className="w-full sm:w-48">
+            <label className="text-xs text-muted-foreground mb-1 block">departamento</label>
+            <Select
+              value={selectedDepartment || "all"}
+              onValueChange={(value) => setSelectedDepartment(value === "all" ? undefined : value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Todos los departamentos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los departamentos</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept.id} value={dept.id.toString()}>
+                    {dept.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex-1">
+            <label className="text-xs text-muted-foreground mb-1 block">tipo de evento</label>
             <MicroTypeSelector
               value={selectedEventType}
               onValueChange={setSelectedEventType}

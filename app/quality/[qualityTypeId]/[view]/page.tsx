@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { QualityV0 } from "@/components/quality_v0/micro/events";
 import { WeeklyKpi } from "@/components/quality_v0/micro/kpi-weekly";
+import { MonthlyKpi } from "@/components/quality_v0/micro/kpi-monthly";
 import { getQualityTypeById } from "@/lib/services/quality-types.service";
 import {
   Breadcrumb,
@@ -13,7 +14,7 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
-const validViews = ["operator", "leader", "audit", "kpi-weekly"] as const;
+const validViews = ["operator", "leader", "audit", "kpi-weekly", "kpi-monthly"] as const;
 
 type ViewType = (typeof validViews)[number];
 
@@ -71,6 +72,7 @@ export default async function QualityTypeViewPage({
     leader: "Liderazgo",
     audit: "Auditoría",
     "kpi-weekly": "KPI Semanal",
+    "kpi-monthly": "KPI Mensual",
   };
   const viewTitle = viewTitleMap[view] || view.charAt(0).toUpperCase() + view.slice(1);
 
@@ -108,6 +110,8 @@ export default async function QualityTypeViewPage({
         <div className="flex-1 min-h-0 flex flex-col">
           {view === "kpi-weekly" ? (
             <WeeklyKpi qualityTypeId={id} />
+          ) : view === "kpi-monthly" ? (
+            <MonthlyKpi qualityTypeId={id} />
           ) : (
             <QualityV0 view={view as "operator" | "leader" | "audit"} qualityTypeId={id} />
           )}
