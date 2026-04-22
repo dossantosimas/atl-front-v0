@@ -16,12 +16,16 @@ interface MicroTypeSelectorProps {
   value?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
+  qualityTypeId?: number;
+  departmentId?: number;
 }
 
 export function MicroTypeSelector({
   value,
   onValueChange,
   placeholder = "Selecciona un tipo de evento",
+  qualityTypeId,
+  departmentId,
 }: MicroTypeSelectorProps) {
   const [microTypes, setMicroTypes] = useState<MicroType[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,12 +35,8 @@ export function MicroTypeSelector({
     async function fetchMicroTypes() {
       try {
         setLoading(true);
-        const data = await getMicroTypes();
+        const data = await getMicroTypes({ qualityTypeId, departmentId });
         setMicroTypes(data);
-        showSuccess(
-          "Tipos de eventos cargados correctamente",
-          `Se encontraron ${data.length} tipos de eventos`
-        );
       } catch (err) {
         showError("Error al cargar tipos de eventos", err);
       } finally {
@@ -45,7 +45,7 @@ export function MicroTypeSelector({
     }
 
     fetchMicroTypes();
-  }, [showSuccess, showError]);
+  }, [qualityTypeId, departmentId, showError]);
 
   return (
     <div className="w-full">

@@ -548,7 +548,7 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                       };
                     return (
                       <React.Fragment key={`metrics-${row.groupName}-${row.typeId}-${dateKey}`}>
-                        <TableCell className={`text-center px-1 border-l ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                        <TableCell className={`text-center px-1 border-l ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : metric.nonCompliant !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                           {metric.details && metric.details.length > 0 ? (
                             <TooltipProvider>
                               <Tooltip>
@@ -578,13 +578,13 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                             metric.nonCompliant.toFixed(0)
                           )}
                         </TableCell>
-                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : metric.total !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                           {metric.total.toFixed(0)}
                         </TableCell>
-                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : metric.badPct !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                           {metric.badPct.toFixed(2)}%
                         </TableCell>
-                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                        <TableCell className={`text-center px-1 ${metric.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : metric.ptsLost !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                           {metric.ptsLost.toFixed(2)}
                         </TableCell>
                         {row.isFirstInGroup ? (
@@ -599,16 +599,16 @@ export function WeeklyKpi({ qualityTypeId }: WeeklyKpiProps) {
                     );
                     })}
                   {/* Celdas de Consolidado Semanal */}
-                  <TableCell className={`text-center px-1 border-l bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                  <TableCell className={`text-center px-1 border-l bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.nonCompliant !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                     {row.weekly.nonCompliant.toFixed(0)}
                   </TableCell>
-                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.total !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                     {row.weekly.total.toFixed(0)}
                   </TableCell>
-                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.badPct !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                     {row.weekly.badPct.toFixed(0)}
                   </TableCell>
-                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                  <TableCell className={`text-center px-1 bg-slate-50/50 dark:bg-slate-900/20 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.ptsLost !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                     {row.weekly.ptsLost.toFixed(2)}
                   </TableCell>
                   {row.isFirstInGroup ? (

@@ -40,5 +40,6 @@ export interface CreateMicroAnalysisDto {
   name?: string;
   code?: string;
   threshold?: string | null;
+  createdAt?: string;
 }
 

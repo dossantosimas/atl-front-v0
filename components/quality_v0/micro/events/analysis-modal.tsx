@@ -42,6 +42,14 @@ interface AnalysisFormData {
   value?: string;
   mode?: "MNPC" | "numeric"; // Para dual
   result?: "POSITIVO" | "NEGATIVO"; // Para boolean
+  createdAt?: string;
+}
+
+type FieldErrorKey = "value" | "createdAt";
+
+interface FieldErrorMessages {
+  value?: string;
+  createdAt?: string;
 }
 
 export function AnalysisModal({
@@ -55,6 +63,7 @@ export function AnalysisModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState<Record<string, AnalysisFormData>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, FieldErrorMessages>>({});
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -65,6 +74,7 @@ export function AnalysisModal({
       setMicroType(null);
       setExistingAnalyses([]);
       setFormData({});
+      setFieldErrors({});
     }
   }, [open, event]);
 
@@ -105,6 +115,76 @@ export function AnalysisModal({
     }
   };
 
+  const setFieldErrorMessage = (
+    typeId: string,
+    field: FieldErrorKey,
+    message?: string
+  ) => {
+      setFieldErrors((prev) => {
+        const current = prev[typeId] || {};
+        if (!message && !current[field]) {
+          return prev;
+        }
+        const updated = { ...current };
+        if (message) {
+          updated[field] = message;
+        } else {
+          delete updated[field];
+        }
+        const next = { ...prev, [typeId]: updated };
+        if (!updated.value && !updated.createdAt) {
+          delete next[typeId];
+        }
+        return next;
+      });
+  };
+
+  const resolveResultValue = (
+    analysisType: AnalysisType,
+    form?: AnalysisFormData
+  ): { valid: boolean; value?: string; message?: string } => {
+    if (!form) {
+      return { valid: false, message: "Completa el resultado" };
+    }
+
+    const trimmedValue = (form.value ?? "").trim();
+
+    switch (analysisType.options) {
+      case "dual":
+        if (!form.mode) {
+          return { valid: false, message: "Selecciona el modo" };
+        }
+        if (form.mode === "MNPC") {
+          return { valid: true, value: "MNPC" };
+        }
+        if (form.mode === "numeric") {
+          if (!trimmedValue) {
+            return { valid: false, message: "Ingresa el valor numérico" };
+          }
+          return { valid: true, value: trimmedValue };
+        }
+        return { valid: false, message: "Selecciona el modo" };
+      case "boolean":
+        if (!form.result) {
+          return { valid: false, message: "Selecciona el resultado" };
+        }
+        return { valid: true, value: form.result };
+      case "numeric":
+        if (!trimmedValue) {
+          return { valid: false, message: "Ingresa el valor numérico" };
+        }
+        return { valid: true, value: trimmedValue };
+      case "otro":
+      case "string":
+        if (!trimmedValue) {
+          return { valid: false, message: "Ingresa el valor" };
+        }
+        return { valid: true, value: trimmedValue };
+      default:
+        return { valid: false, message: "Tipo de análisis no soportado" };
+    }
+  };
+
   const handleSave = async (analysisType: AnalysisType) => {
     if (!event) return;
 
@@ -114,52 +194,34 @@ export function AnalysisModal({
       return;
     }
 
-    // Usar el condition del analysisType, no del form
     const condition = analysisType.condition || "=";
+    const valueResult = resolveResultValue(analysisType, form);
+    if (!valueResult.valid) {
+      setFieldErrorMessage(analysisType.id, "value", valueResult.message);
+      showError("Error", new Error(valueResult.message || "Debe ingresar un valor"));
+      return;
+    }
+
+    if (!form.createdAt) {
+      const dateMessage = "Selecciona la fecha del análisis";
+      setFieldErrorMessage(analysisType.id, "createdAt", dateMessage);
+      showError("Error", new Error(dateMessage));
+      return;
+    }
 
     try {
       setSaving((prev) => new Set(prev).add(analysisType.id));
-
-      let value: string | undefined;
-
-      if (form.options === "dual") {
-        if (form.mode === "MNPC") {
-          value = "MNPC";
-        } else if (form.mode === "numeric" && form.value) {
-          value = form.value;
-        } else {
-          showError("Error", new Error("Debe ingresar un valor numérico"));
-          setSaving((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(analysisType.id);
-            return newSet;
-          });
-          return;
-        }
-      } else if (form.options === "boolean") {
-        value = form.result || "";
-      } else if (form.options === "otro" || form.options === "numeric" || form.options === "string") {
-        if (!form.value) {
-          showError("Error", new Error("Debe ingresar un valor"));
-          setSaving((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(analysisType.id);
-            return newSet;
-          });
-          return;
-        }
-        value = form.value;
-      }
 
       const payload = {
         eventId: event.id,
         typeId: analysisType.id,
         options: form.options,
         condition: condition as "=" | ">" | ">=" | "<" | "<=" | "!=" | "between",
-        value: value || "",
+        value: valueResult.value || "",
         name: analysisType.name,
         code: analysisType.code,
         threshold: analysisType.threshold || null,
+        createdAt: form.createdAt,
       };
 
       console.log("Creating analysis with payload:", payload);
@@ -180,6 +242,8 @@ export function AnalysisModal({
         delete newData[analysisType.id];
         return newData;
       });
+      setFieldErrorMessage(analysisType.id, "value");
+      setFieldErrorMessage(analysisType.id, "createdAt");
 
       onAnalysisCreated?.();
     } catch (error: any) {
@@ -237,6 +301,17 @@ export function AnalysisModal({
         [typeId]: { ...current, ...updates },
       };
     });
+  };
+
+  const handleFormChange = (
+    typeId: string,
+    updates: Partial<AnalysisFormData>,
+    fieldToClear?: FieldErrorKey
+  ) => {
+    updateFormData(typeId, updates);
+    if (fieldToClear) {
+      setFieldErrorMessage(typeId, fieldToClear);
+    }
   };
 
   // Función para evaluar si el valor cumple la condición con el threshold
@@ -369,7 +444,7 @@ export function AnalysisModal({
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6">
             {/* Análisis ya realizados */}
             <div>
               <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
@@ -486,6 +561,12 @@ export function AnalysisModal({
                 {analysisTypes.map((analysisType) => {
                   const isDone = isAnalysisDone(analysisType.id);
                   const form = formData[analysisType.id];
+                  const valueResult = resolveResultValue(analysisType, form);
+                  const isSaveDisabled =
+                    saving.has(analysisType.id) ||
+                    !form ||
+                    !form.createdAt ||
+                    !valueResult.valid;
                   
                   console.log(`🔎 Verificando análisis pendiente: ${analysisType.name} (${analysisType.id}) - isDone: ${isDone}`);
 
@@ -512,11 +593,11 @@ export function AnalysisModal({
                           <Select
                             value={form?.mode || ""}
                             onValueChange={(value) =>
-                              updateFormData(analysisType.id, {
-                                mode: value as "MNPC" | "numeric",
-                                options: "dual",
-                                condition: analysisType.condition || "=",
-                              })
+                              handleFormChange(
+                                analysisType.id,
+                                { mode: value as "MNPC" | "numeric" },
+                                "value"
+                              )
                             }
                           >
                             <SelectTrigger className="w-full">
@@ -533,9 +614,11 @@ export function AnalysisModal({
                               placeholder="Ingrese el valor numérico"
                               value={form?.value || ""}
                               onChange={(e) =>
-                                updateFormData(analysisType.id, {
-                                  value: e.target.value,
-                                })
+                                handleFormChange(
+                                  analysisType.id,
+                                  { value: e.target.value },
+                                  "value"
+                                )
                               }
                             />
                           )}
@@ -547,11 +630,11 @@ export function AnalysisModal({
                         <Select
                           value={form?.result || ""}
                           onValueChange={(value) =>
-                            updateFormData(analysisType.id, {
-                              result: value as "POSITIVO" | "NEGATIVO",
-                              options: "boolean",
-                              condition: analysisType.condition || "=",
-                            })
+                            handleFormChange(
+                              analysisType.id,
+                              { result: value as "POSITIVO" | "NEGATIVO" },
+                              "value"
+                            )
                           }
                         >
                           <SelectTrigger className="w-full">
@@ -571,11 +654,11 @@ export function AnalysisModal({
                           placeholder="Ingrese el valor"
                           value={form?.value || ""}
                           onChange={(e) =>
-                            updateFormData(analysisType.id, {
-                              value: e.target.value,
-                              options: "otro",
-                              condition: analysisType.condition || "=",
-                            })
+                            handleFormChange(
+                              analysisType.id,
+                              { value: e.target.value },
+                              "value"
+                            )
                           }
                         />
                       )}
@@ -587,11 +670,11 @@ export function AnalysisModal({
                           placeholder="Ingrese el valor numérico"
                           value={form?.value || ""}
                           onChange={(e) =>
-                            updateFormData(analysisType.id, {
-                              value: e.target.value,
-                              options: "numeric",
-                              condition: analysisType.condition || "=",
-                            })
+                            handleFormChange(
+                              analysisType.id,
+                              { value: e.target.value },
+                              "value"
+                            )
                           }
                         />
                       )}
@@ -603,30 +686,41 @@ export function AnalysisModal({
                           placeholder="Ingrese el valor"
                           value={form?.value || ""}
                           onChange={(e) =>
-                            updateFormData(analysisType.id, {
-                              value: e.target.value,
-                              options: "string",
-                              condition: analysisType.condition || "=",
-                            })
+                            handleFormChange(
+                              analysisType.id,
+                              { value: e.target.value },
+                              "value"
+                            )
                           }
                         />
                       )}
 
+                      <div className="mt-3 space-y-1">
+                        <label className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                          Fecha del análisis
+                        </label>
+                        <Input
+                          type="date"
+                          value={form?.createdAt || ""}
+                          onChange={(e) =>
+                            handleFormChange(
+                              analysisType.id,
+                              { createdAt: e.target.value },
+                              "createdAt"
+                            )
+                          }
+                        />
+                        {fieldErrors[analysisType.id]?.createdAt && (
+                          <p className="text-xs text-rose-600">
+                            {fieldErrors[analysisType.id]?.createdAt}
+                          </p>
+                        )}
+                      </div>
+
                       <div className="mt-3">
                         <Button
                           onClick={() => handleSave(analysisType)}
-                          disabled={
-                            saving.has(analysisType.id) ||
-                            !form ||
-                            (analysisType.options === "dual" &&
-                              (!form.mode ||
-                                (form.mode === "numeric" && !form.value))) ||
-                            (analysisType.options === "boolean" && !form.result) ||
-                            ((analysisType.options === "otro" ||
-                              analysisType.options === "numeric" ||
-                              analysisType.options === "string") &&
-                              !form.value)
-                          }
+                          disabled={isSaveDisabled}
                           size="sm"
                         >
                           {saving.has(analysisType.id) ? (

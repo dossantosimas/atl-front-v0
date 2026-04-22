@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -40,9 +40,109 @@ interface AnalysisFormData {
   options: "dual" | "boolean" | "otro" | "numeric" | "string";
   condition: "=" | ">" | ">=" | "<" | "<=" | "!=" | "between";
   value?: string;
-  mode?: "MNPC" | "numeric"; // Para dual
-  result?: "POSITIVO" | "NEGATIVO"; // Para boolean
+  mode?: "MNPC" | "numeric";
+  result?: "POSITIVO" | "NEGATIVO";
+  date?: string;
 }
+
+type FieldErrorKey = "value" | "date";
+
+interface FieldErrorMessages {
+  value?: string;
+  date?: string;
+}
+
+interface FormFieldProps {
+  label: string;
+  error?: string;
+  children: ReactNode;
+}
+
+const FormField = ({ label, error, children }: FormFieldProps) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+      {label}
+    </span>
+    {children}
+    {error && <p className="text-[11px] text-rose-600">{error}</p>}
+  </div>
+);
+
+interface AnalysisValueStatus {
+  value?: string;
+  missing: boolean;
+  error?: string;
+}
+
+const resolveAnalysisValueStatus = (
+  analysisType: AnalysisType,
+  form?: AnalysisFormData
+): AnalysisValueStatus => {
+  if (!form) {
+    return { missing: true, error: "Completa los campos del anÃ¡lisis" };
+  }
+
+  const trimmedValue = (form.value ?? "").trim();
+
+  switch (analysisType.options) {
+    case "dual":
+      if (!form.mode) {
+        return { missing: true, error: "Selecciona el modo" };
+      }
+      if (form.mode === "MNPC") {
+        return { missing: false, value: "MNPC" };
+      }
+      if (form.mode === "numeric") {
+        if (!trimmedValue) {
+          return { missing: true, error: "Ingresa el valor numÃ©rico" };
+        }
+        return { missing: false, value: trimmedValue };
+      }
+      return { missing: true, error: "Selecciona el modo" };
+    case "boolean":
+      if (!form.result) {
+        return { missing: true, error: "Selecciona el resultado" };
+      }
+      return { missing: false, value: form.result };
+    case "numeric":
+      if (!trimmedValue) {
+        return { missing: true, error: "Ingresa el valor numÃ©rico" };
+      }
+      return { missing: false, value: trimmedValue };
+    case "otro":
+    case "string":
+      if (!trimmedValue) {
+        return { missing: true, error: "Ingresa el valor" };
+      }
+      return { missing: false, value: trimmedValue };
+    default:
+      return { missing: true, error: "Tipo de anÃ¡lisis no soportado" };
+  }
+};
+
+const formatAnalysisDate = (dateString?: string) => {
+  if (!dateString) {
+    return "-";
+  }
+  try {
+    return new Date(dateString).toLocaleString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+const statusToneMap: Record<"pass" | "fail" | "no-threshold", string> = {
+  pass: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/40 dark:border-emerald-600",
+  fail: "bg-rose-50 border-rose-200 dark:bg-rose-900/50 dark:border-rose-500",
+  "no-threshold":
+    "bg-slate-50 border-slate-200 dark:bg-slate-900/50 dark:border-slate-800",
+};
 
 export function AnalysisModal({
   event,
@@ -55,27 +155,25 @@ export function AnalysisModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState<Record<string, AnalysisFormData>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, FieldErrorMessages>>({});
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     if (open && event) {
       loadData();
     } else {
-      // Resetear cuando se cierra el modal
       setMicroType(null);
       setExistingAnalyses([]);
       setFormData({});
+      setFieldErrors({});
     }
   }, [open, event]);
 
   const loadData = async () => {
     if (!event) return;
 
-    // Necesitamos el typeId del evento, pero si no está disponible, no podemos cargar los análisis
-    // El typeId debería estar disponible desde el filtro seleccionado
-    // Por ahora, intentamos obtenerlo del evento o necesitamos pasarlo como prop
     const eventTypeId = event.typeId;
-    
+
     if (!eventTypeId) {
       showError("Error", new Error("No se puede determinar el tipo de evento"));
       return;
@@ -83,25 +181,43 @@ export function AnalysisModal({
 
     try {
       setLoading(true);
-      
-      // Obtener el tipo de evento completo con sus análisis
       const type = await getMicroTypeById(eventTypeId);
       setMicroType(type);
-
-      // Obtener los análisis existentes del evento
       const analyses = await getMicroAnalysisByEventId(event.id);
-      console.log("📋 Análisis existentes cargados:", analyses.map(a => ({ 
-        id: a.id, 
-        type_id: a.type_id, 
-        name: a.name 
-      })));
       setExistingAnalyses(analyses);
     } catch (error) {
       console.error("Error loading analysis data:", error);
-      showError("Error al cargar los datos", error);
+      showError("Error al cargar los datos", error as Error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const setFieldErrorMessage = (
+    typeId: string,
+    field: FieldErrorKey,
+    message?: string
+  ) => {
+    setFieldErrors((prev) => {
+      const existing = prev[typeId] || {};
+      if (!message && !existing[field]) {
+        return prev;
+      }
+      if (message && existing[field] === message) {
+        return prev;
+      }
+      const updated = { ...existing };
+      if (message) {
+        updated[field] = message;
+      } else {
+        delete updated[field];
+      }
+      const next = { ...prev, [typeId]: updated };
+      if (Object.keys(updated).length === 0) {
+        delete next[typeId];
+      }
+      return next;
+    });
   };
 
   const handleSave = async (analysisType: AnalysisType) => {
@@ -109,127 +225,84 @@ export function AnalysisModal({
 
     const form = formData[analysisType.id];
     if (!form) {
-      showError("Error", new Error("Debe completar el formulario"));
+      const message = "Completa los campos del anÃ¡lisis";
+      setFieldErrorMessage(analysisType.id, "value", message);
+      showError("Error", new Error(message));
       return;
     }
 
-    // Usar el condition del analysisType, no del form
-    const condition = analysisType.condition || "=";
+    const valueStatus = resolveAnalysisValueStatus(analysisType, form);
+    if (valueStatus.missing) {
+      setFieldErrorMessage(analysisType.id, "value", valueStatus.error);
+      showError(
+        "Error",
+        new Error(valueStatus.error || "Debe completar el resultado")
+      );
+      return;
+    }
+
+    if (!form.date) {
+      const dateMessage = "Selecciona la fecha del anÃ¡lisis";
+      setFieldErrorMessage(analysisType.id, "date", dateMessage);
+      showError("Error", new Error(dateMessage));
+      return;
+    }
 
     try {
       setSaving((prev) => new Set(prev).add(analysisType.id));
-
-      let value: string | undefined;
-
-      if (form.options === "dual") {
-        if (form.mode === "MNPC") {
-          value = "MNPC";
-        } else if (form.mode === "numeric" && form.value) {
-          value = form.value;
-        } else {
-          showError("Error", new Error("Debe ingresar un valor numérico"));
-          setSaving((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(analysisType.id);
-            return newSet;
-          });
-          return;
-        }
-      } else if (form.options === "boolean") {
-        value = form.result || "";
-      } else if (form.options === "otro" || form.options === "numeric" || form.options === "string") {
-        if (!form.value) {
-          showError("Error", new Error("Debe ingresar un valor"));
-          setSaving((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(analysisType.id);
-            return newSet;
-          });
-          return;
-        }
-        value = form.value;
-      }
 
       const payload = {
         eventId: event.id,
         typeId: analysisType.id,
         options: form.options,
-        condition: condition as "=" | ">" | ">=" | "<" | "<=" | "!=" | "between",
-        value: value || "",
+        condition: analysisType.condition || "=",
+        value: valueStatus.value || "",
         name: analysisType.name,
         code: analysisType.code,
         threshold: analysisType.threshold || null,
+        date: form.date,
       };
 
-      console.log("Creating analysis with payload:", payload);
-      
       await createMicroAnalysis(payload);
 
-      showSuccess("Análisis creado correctamente");
-      
-      // Recargar los análisis para actualizar la lista
+      showSuccess("AnÃ¡lisis creado correctamente");
+
       const analyses = await getMicroAnalysisByEventId(event.id);
-      console.log("Análisis recargados después de guardar:", analyses);
-      console.log("TypeId del análisis guardado:", analysisType.id);
       setExistingAnalyses(analyses);
-      
-      // Limpiar el formulario de este análisis
+
       setFormData((prev) => {
-        const newData = { ...prev };
-        delete newData[analysisType.id];
-        return newData;
+        const next = { ...prev };
+        delete next[analysisType.id];
+        return next;
       });
+
+      setFieldErrorMessage(analysisType.id, "value");
+      setFieldErrorMessage(analysisType.id, "date");
 
       onAnalysisCreated?.();
     } catch (error: any) {
       console.error("Error completo:", error);
       console.error("Response data:", error?.response?.data);
-      showError("Error al crear el análisis", error);
+      showError("Error al crear el anÃ¡lisis", error);
     } finally {
       setSaving((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(analysisType.id);
-        return newSet;
+        const next = new Set(prev);
+        next.delete(analysisType.id);
+        return next;
       });
     }
-  };
-
-  const isAnalysisDone = (typeId: string): boolean => {
-    if (!typeId || !existingAnalyses || existingAnalyses.length === 0) {
-      return false;
-    }
-    
-    // Verificar si ya existe un análisis con este typeId
-    // Comparación estricta convirtiendo ambos a string
-    const found = existingAnalyses.some((a) => {
-      if (!a.type_id) return false;
-      const match = String(a.type_id).trim() === String(typeId).trim();
-      if (match) {
-        console.log("✅ Análisis encontrado como completado:", {
-          buscando: typeId,
-          encontrado: a.type_id,
-          nombre: a.name
-        });
-      }
-      return match;
-    });
-    
-    if (!found) {
-      console.log("❌ Análisis NO encontrado:", {
-        buscando: typeId,
-        existentes: existingAnalyses.map(a => ({ type_id: a.type_id, name: a.name }))
-      });
-    }
-    
-    return found;
   };
 
   const updateFormData = (typeId: string, updates: Partial<AnalysisFormData>) => {
     setFormData((prev) => {
       const current = prev[typeId] || {
         typeId,
-        options: microType?.analysisTypes?.find((at) => at.id === typeId)?.options || "otro",
-        condition: microType?.analysisTypes?.find((at) => at.id === typeId)?.condition || "=",
+        options:
+          microType?.analysisTypes?.find((at) => at.id === typeId)?.options ||
+          "otro",
+        condition:
+          microType?.analysisTypes?.find((at) => at.id === typeId)?.condition ||
+          "=",
       };
       return {
         ...prev,
@@ -238,66 +311,74 @@ export function AnalysisModal({
     });
   };
 
-  // Función para evaluar si el valor cumple la condición con el threshold
-  const evaluateCondition = (analysis: MicroAnalysis): "pass" | "fail" | "no-threshold" => {
-    // Si no hay threshold, fondo transparente
-    if (!analysis.threshold || analysis.threshold.trim() === "") {
-      console.log("No threshold:", analysis);
-      return "no-threshold";
+  const evaluationWithThreshold = (analysis: MicroAnalysis) => {
+    if (!analysis.threshold || !analysis.value) {
+      return "no-threshold" as const;
     }
 
-    // Si no hay valor, no se puede evaluar
-    if (!analysis.value || analysis.value.trim() === "") {
-      console.log("No value:", analysis);
-      return "no-threshold";
-    }
-
-    // Ambos son strings, comparar como strings
     const valueStr = analysis.value.trim();
     const thresholdStr = analysis.threshold.trim();
-
-    // Intentar convertir a números si es posible (para comparaciones numéricas)
     const valueNum = parseFloat(valueStr);
     const thresholdNum = parseFloat(thresholdStr);
-    const areNumbers = !isNaN(valueNum) && !isNaN(thresholdNum) && isFinite(valueNum) && isFinite(thresholdNum);
+    const areNumbers =
+      !Number.isNaN(valueNum) &&
+      !Number.isNaN(thresholdNum) &&
+      Number.isFinite(valueNum) &&
+      Number.isFinite(thresholdNum);
 
-    // Evaluar la condición comparando strings o números según corresponda
     let passes = false;
     switch (analysis.condition) {
       case "=":
         passes = valueStr === thresholdStr;
         break;
       case ">":
-        // Si ambos son números, comparar numéricamente; si no, comparar como strings
         passes = areNumbers ? valueNum > thresholdNum : valueStr > thresholdStr;
         break;
       case ">=":
-        passes = areNumbers ? valueNum >= thresholdNum : valueStr >= thresholdStr;
+        passes = areNumbers
+          ? valueNum >= thresholdNum
+          : valueStr >= thresholdStr;
         break;
       case "<":
         passes = areNumbers ? valueNum < thresholdNum : valueStr < thresholdStr;
         break;
       case "<=":
-        passes = areNumbers ? valueNum <= thresholdNum : valueStr <= thresholdStr;
+        passes = areNumbers
+          ? valueNum <= thresholdNum
+          : valueStr <= thresholdStr;
         break;
       case "!=":
         passes = valueStr !== thresholdStr;
         break;
+      case "between":
+        if (areNumbers) {
+          const rangeParts = thresholdStr.split("-");
+          if (rangeParts.length === 2) {
+            const min = parseFloat(rangeParts[0].trim());
+            const max = parseFloat(rangeParts[1].trim());
+            if (
+              !Number.isNaN(min) &&
+              !Number.isNaN(max) &&
+              Number.isFinite(min) &&
+              Number.isFinite(max)
+            ) {
+              passes = valueNum >= min && valueNum <= max;
+            }
+          }
+        } else {
+          const rangeParts = thresholdStr.split("-");
+          if (rangeParts.length === 2) {
+            const min = rangeParts[0].trim();
+            const max = rangeParts[1].trim();
+            passes = valueStr >= min && valueStr <= max;
+          }
+        }
+        break;
       default:
-        return "no-threshold";
+        return "no-threshold" as const;
     }
 
-    console.log("Evaluación de condición:", {
-      name: analysis.name,
-      value: valueStr,
-      threshold: thresholdStr,
-      condition: analysis.condition,
-      areNumbers,
-      passes,
-      result: passes ? "pass" : "fail"
-    });
-
-    return passes ? "pass" : "fail";
+    return passes ? ("pass" as const) : ("fail" as const);
   };
 
   if (!event || !microType) {
@@ -305,183 +386,245 @@ export function AnalysisModal({
   }
 
   const analysisTypes = microType.analysisTypes || [];
-  const modalWidth = "sm:max-w-7xl w-[95vw]";
+  const pendingAnalysisTypes = analysisTypes.filter(
+    (analysisType) => !existingAnalyses.some((analysis) =>
+      String(analysis.type_id).trim() === String(analysisType.id).trim()
+    )
+  );
+  const combinedAnalyses = [
+    ...existingAnalyses.map((analysis) => ({
+      kind: "completed" as const,
+      analysis,
+      key: `completed-${analysis.id}`,
+    })),
+    ...pendingAnalysisTypes.map((analysisType) => ({
+      kind: "pending" as const,
+      analysisType,
+      key: `pending-${analysisType.id}`,
+    })),
+  ];
+  const modalWidth = "sm:max-w-6xl w-[95vw]";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${modalWidth} max-h-[85vh] overflow-y-auto`}>
-        <DialogHeader className="border-b pb-3">
-          <DialogTitle className="text-base font-semibold text-gray-800">
-            Análisis - {event.code} - {event.element?.name}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 mt-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-6">
-            {/* Análisis ya realizados */}
+      <DialogContent className={`${modalWidth} max-h-[90vh] p-0`}>
+        <div className="flex h-full flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
+          <DialogHeader className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
             <div>
-              <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                Análisis Realizados
-              </h3>
-              <div className="space-y-2">
-                {existingAnalyses.length > 0 ? (
-                  existingAnalyses.map((analysis) => {
-                    // Usar name y code directamente de la respuesta
-                    const typeName = analysis.name || "Desconocido";
-                    const typeCode = analysis.code || "";
-                    
-                    // Obtener el threshold del analysisType si no viene en el analysis
-                    const analysisType = analysisTypes.find((at) => at.id === analysis.type_id);
-                    const threshold = analysis.threshold || analysisType?.threshold || null;
-                    
-                    // Crear un objeto con threshold para la evaluación
-                    const analysisWithThreshold = {
-                      ...analysis,
-                      threshold: threshold,
-                    };
-                    
-                    // Evaluar la condición para determinar el color de fondo
-                    const conditionResult = evaluateCondition(analysisWithThreshold);
-                    
-                    console.log("Aplicando color para:", analysis.name, {
-                      value: analysis.value,
-                      threshold: threshold,
-                      condition: analysis.condition,
-                      result: conditionResult
-                    });
-                    
-                    // Determinar estilos según el resultado
-                    let bgStyle: React.CSSProperties = {};
-                    let borderStyle: React.CSSProperties = {};
-                    
-                    if (conditionResult === "pass") {
-                      bgStyle = { backgroundColor: "#dcfce7" };
-                      borderStyle = { borderColor: "#86efac" };
-                    } else if (conditionResult === "fail") {
-                      bgStyle = { backgroundColor: "#fee2e2" };
-                      borderStyle = { borderColor: "#fca5a5" };
-                    } else {
-                      // no-threshold: fondo transparente (mantener el original)
-                      bgStyle = {};
-                      borderStyle = {};
-                    }
-                    
-                    // Formatear la fecha de creación
-                    const formatDate = (dateString?: string) => {
-                      if (!dateString) return "-";
-                      try {
-                        return new Date(dateString).toLocaleString("es-ES", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        });
-                      } catch {
-                        return dateString;
-                      }
-                    };
+              <DialogTitle className="text-base font-semibold text-slate-900 dark:text-white">
+                AnÃ¡lisis Â· {event.code} Â· {event.element?.name}
+              </DialogTitle>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                RegistrÃ¡ los anÃ¡lisis segÃºn el tipo de evento y su respuesta dinÃ¡mica.
+              </p>
+            </div>
+          </DialogHeader>
 
-                    return (
-                      <div
-                        key={analysis.id}
-                        className={`p-3 rounded-lg border ${
-                          conditionResult === "pass" 
-                            ? "!bg-green-100 dark:!bg-green-900 !border-green-300 dark:!border-green-700" 
-                            : conditionResult === "fail" 
-                            ? "!bg-[#E00030]/10 dark:!bg-[#E00030]/20 !border-[#E00030] dark:!border-[#E00030]" 
-                            : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                        }`}
-                        style={{ ...bgStyle, ...borderStyle }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{typeName}</div>
-                            {typeCode && (
-                              <div className="text-xs text-muted-foreground">
-                                Código: {typeCode}
-                              </div>
-                            )}
-                            <div className="text-sm text-muted-foreground">
-                              {analysis.value || "-"}
-                            </div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Creado: {formatDate(analysis.created)}
-                            </div>
-                          </div>
-                          <Badge variant="outline" className="bg-green-100 dark:bg-green-900">
-                            Completado
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-sm text-muted-foreground py-4">
-                    No hay análisis realizados
+          <div className="px-6 py-5 overflow-y-auto">
+            {loading ? (
+              <div className="flex h-64 items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {existingAnalyses.length === 0 && pendingAnalysisTypes.length === 0 && (
+                  <div className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900/60">
+                    No hay análisis disponibles.
                   </div>
                 )}
-              </div>
-            </div>
+                {existingAnalyses.map((analysis) => {
+                  const typeName = analysis.name || "Desconocido";
+                  const typeCode = analysis.code || "";
+                  const analysisType = analysisTypes.find((at) => at.id === analysis.type_id);
+                  const threshold = analysis.threshold || analysisType?.threshold || null;
+                  const enrichedAnalysis = {
+                    ...analysis,
+                    threshold,
+                  };
+                  const conditionResult = evaluationWithThreshold(enrichedAnalysis);
+                  const toneClasses = statusToneMap[conditionResult];
+                  console.log("Aplicando color para:", analysis.name, {
+                    value: analysis.value,
+                    threshold,
+                    condition: analysis.condition,
+                    result: conditionResult,
+                  });
+                  const formatDate = (dateString?: string) => {
+                    if (!dateString) return "-";
+                    try {
+                      return new Date(dateString).toLocaleString("es-ES", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
+                    } catch {
+                      return dateString;
+                    }
+                  };
 
-            {/* Análisis pendientes */}
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
-                Análisis Pendientes
-              </h3>
-              <div className="space-y-4">
-                {analysisTypes.map((analysisType) => {
-                  const isDone = isAnalysisDone(analysisType.id);
+                  return (
+                    <div
+                      key={analysis.id}
+                      className={`rounded-2xl border p-4 shadow-sm transition ${toneClasses}`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {typeName}
+                          </p>
+                          {typeCode && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              Código: {typeCode}
+                            </p>
+                          )}
+                          <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                            {analysis.value || "-"}
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                            Registrado: {formatAnalysisDate(analysis.created)}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          Completado
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {pendingAnalysisTypes.map((analysisType) => {
                   const form = formData[analysisType.id];
-                  
-                  console.log(`🔎 Verificando análisis pendiente: ${analysisType.name} (${analysisType.id}) - isDone: ${isDone}`);
+                  const valueError = fieldErrors[analysisType.id]?.value;
+                  const dateError = fieldErrors[analysisType.id]?.date;
+                  const cardHasError = Boolean(valueError || dateError);
+                  const cardBorderClasses = cardHasError
+                    ? "border-rose-200 bg-rose-50/30 dark:border-rose-500/70 dark:bg-rose-900/30"
+                    : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950";
 
-                  if (isDone) {
-                    console.log(`⏭️ Saltando ${analysisType.name} porque ya está completado`);
-                    return null; // No mostrar si ya está hecho
-                  }
+                  const valueStatus = resolveAnalysisValueStatus(analysisType, form);
+                  const showModeError =
+                    analysisType.options === "dual" && Boolean(valueError && !form?.mode);
+                  const showValueInputError =
+                    analysisType.options === "dual"
+                      ? Boolean(valueError && form?.mode === "numeric")
+                      : Boolean(valueError);
+                  const isSaveDisabled =
+                    saving.has(analysisType.id) || valueStatus.missing || !form?.date;
 
                   return (
                     <div
                       key={analysisType.id}
-                      className="p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+                      className={`rounded-2xl border p-4 shadow-sm transition flex flex-col gap-4 ${cardBorderClasses}`}
                     >
-                      <div className="mb-3">
-                        <div className="font-medium">{analysisType.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          Código: {analysisType.code}
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {analysisType.name}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Código: {analysisType.code}
+                          </p>
                         </div>
+                        <Badge variant="outline" className="text-[11px] uppercase tracking-[0.3em]">
+                          Pendiente
+                        </Badge>
                       </div>
 
-                      {/* Dual: MNPC o numérico */}
-                      {analysisType.options === "dual" && (
-                        <div className="space-y-3">
-                          <Select
-                            value={form?.mode || ""}
-                            onValueChange={(value) =>
-                              updateFormData(analysisType.id, {
-                                mode: value as "MNPC" | "numeric",
-                                options: "dual",
-                                condition: analysisType.condition || "=",
-                              })
-                            }
+                      <div className="space-y-3">
+                        {analysisType.options === "dual" && (
+                          <>
+                            <FormField
+                              label="Modo"
+                              error={showModeError ? valueError : undefined}
+                            >
+                              <Select
+                                value={form?.mode || ""}
+                                onValueChange={(value) =>
+                                  updateFormData(analysisType.id, {
+                                    mode: value as "MNPC" | "numeric",
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="h-11 w-full rounded-xl border border-slate-200 text-sm">
+                                  <SelectValue placeholder="Selecciona el modo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="MNPC">MNPC</SelectItem>
+                                  <SelectItem value="numeric">Numérico</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormField>
+                            {form?.mode === "numeric" && (
+                              <FormField
+                                label="Valor numérico"
+                                error={showValueInputError ? valueError : undefined}
+                              >
+                                <Input
+                                  type="number"
+                                  className="h-11 rounded-xl border border-slate-200 text-sm"
+                                  placeholder="Ingrese el valor numérico"
+                                  value={form?.value || ""}
+                                  onChange={(e) =>
+                                    updateFormData(analysisType.id, {
+                                      value: e.target.value,
+                                    })
+                                  }
+                                />
+                              </FormField>
+                            )}
+                          </>
+                        )}
+
+                        {analysisType.options === "boolean" && (
+                          <FormField label="Resultado" error={valueError}>
+                            <Select
+                              value={form?.result || ""}
+                              onValueChange={(value) =>
+                                updateFormData(analysisType.id, {
+                                  result: value as "POSITIVO" | "NEGATIVO",
+                                })
+                              }
+                            >
+                              <SelectTrigger className="h-11 w-full rounded-xl border border-slate-200 text-sm">
+                                <SelectValue placeholder="Selecciona el resultado" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="POSITIVO">POSITIVO</SelectItem>
+                                <SelectItem value="NEGATIVO">NEGATIVO</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormField>
+                        )}
+
+                        {(analysisType.options === "otro" || analysisType.options === "string") && (
+                          <FormField
+                            label="Resultado"
+                            error={showValueInputError ? valueError : undefined}
                           >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecciona el modo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="MNPC">MNPC</SelectItem>
-                              <SelectItem value="numeric">Numérico</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {form?.mode === "numeric" && (
+                            <Input
+                              type="text"
+                              className="h-11 rounded-xl border border-slate-200 text-sm"
+                              placeholder="Ingrese el valor"
+                              value={form?.value || ""}
+                              onChange={(e) =>
+                                updateFormData(analysisType.id, {
+                                  value: e.target.value,
+                                })
+                              }
+                            />
+                          </FormField>
+                        )}
+
+                        {analysisType.options === "numeric" && (
+                          <FormField
+                            label="Resultado"
+                            error={showValueInputError ? valueError : undefined}
+                          >
                             <Input
                               type="number"
+                              className="h-11 rounded-xl border border-slate-200 text-sm"
                               placeholder="Ingrese el valor numérico"
                               value={form?.value || ""}
                               onChange={(e) =>
@@ -490,96 +633,29 @@ export function AnalysisModal({
                                 })
                               }
                             />
-                          )}
-                        </div>
-                      )}
+                          </FormField>
+                        )}
 
-                      {/* Boolean: POSITIVO o NEGATIVO */}
-                      {analysisType.options === "boolean" && (
-                        <Select
-                          value={form?.result || ""}
-                          onValueChange={(value) =>
-                            updateFormData(analysisType.id, {
-                              result: value as "POSITIVO" | "NEGATIVO",
-                              options: "boolean",
-                              condition: analysisType.condition || "=",
-                            })
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Selecciona el resultado" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="POSITIVO">POSITIVO</SelectItem>
-                            <SelectItem value="NEGATIVO">NEGATIVO</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                        <FormField label="Fecha del análisis" error={dateError}>
+                          <Input
+                            type="date"
+                            className="h-11 rounded-xl border border-slate-200 text-sm"
+                            value={form?.date || ""}
+                            onChange={(e) =>
+                              updateFormData(analysisType.id, {
+                                date: e.target.value,
+                              })
+                            }
+                          />
+                        </FormField>
+                      </div>
 
-                      {/* Otro: input de texto */}
-                      {analysisType.options === "otro" && (
-                        <Input
-                          type="text"
-                          placeholder="Ingrese el valor"
-                          value={form?.value || ""}
-                          onChange={(e) =>
-                            updateFormData(analysisType.id, {
-                              value: e.target.value,
-                              options: "otro",
-                              condition: analysisType.condition || "=",
-                            })
-                          }
-                        />
-                      )}
-
-                      {/* Numeric: input numérico */}
-                      {analysisType.options === "numeric" && (
-                        <Input
-                          type="number"
-                          placeholder="Ingrese el valor numérico"
-                          value={form?.value || ""}
-                          onChange={(e) =>
-                            updateFormData(analysisType.id, {
-                              value: e.target.value,
-                              options: "numeric",
-                              condition: analysisType.condition || "=",
-                            })
-                          }
-                        />
-                      )}
-
-                      {/* String: input de texto */}
-                      {analysisType.options === "string" && (
-                        <Input
-                          type="text"
-                          placeholder="Ingrese el valor"
-                          value={form?.value || ""}
-                          onChange={(e) =>
-                            updateFormData(analysisType.id, {
-                              value: e.target.value,
-                              options: "string",
-                              condition: analysisType.condition || "=",
-                            })
-                          }
-                        />
-                      )}
-
-                      <div className="mt-3">
+                      <div className="flex justify-end">
                         <Button
-                          onClick={() => handleSave(analysisType)}
-                          disabled={
-                            saving.has(analysisType.id) ||
-                            !form ||
-                            (analysisType.options === "dual" &&
-                              (!form.mode ||
-                                (form.mode === "numeric" && !form.value))) ||
-                            (analysisType.options === "boolean" && !form.result) ||
-                            ((analysisType.options === "otro" ||
-                              analysisType.options === "numeric" ||
-                              analysisType.options === "string") &&
-                              !form.value)
-                          }
                           size="sm"
+                          className="w-full rounded-full md:w-auto"
+                          onClick={() => handleSave(analysisType)}
+                          disabled={isSaveDisabled}
                         >
                           {saving.has(analysisType.id) ? (
                             <>
@@ -595,12 +671,243 @@ export function AnalysisModal({
                   );
                 })}
               </div>
+            )}
+
+                <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+                        AnÃ¡lisis pendientes
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        RegistrÃ¡ cada resultado con su fecha obligatoria.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {pendingAnalysisTypes.length === 0 ? (
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        Todos los anÃ¡lisis ya fueron registrados.
+                      </p>
+                    ) : (
+                      pendingAnalysisTypes.map((analysisType) => {
+                        const form = formData[analysisType.id];
+                        const valueError = fieldErrors[analysisType.id]?.value;
+                        const dateError = fieldErrors[analysisType.id]?.date;
+                        const cardHasError = Boolean(valueError || dateError);
+                        const cardBorderClasses = cardHasError
+                          ? "border-rose-200 bg-rose-50/30 dark:border-rose-500/70 dark:bg-rose-900/30"
+                          : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950";
+
+                        const valueStatus = resolveAnalysisValueStatus(
+                          analysisType,
+                          form
+                        );
+                        const showModeError =
+                          analysisType.options === "dual" &&
+                          Boolean(valueError && !form?.mode);
+                        const showValueInputError =
+                          analysisType.options === "dual"
+                            ? Boolean(valueError && form?.mode === "numeric")
+                            : Boolean(valueError);
+                        const isSaveDisabled =
+                          saving.has(analysisType.id) ||
+                          valueStatus.missing ||
+                          !form?.date;
+
+                        return (
+                          <div
+                            key={analysisType.id}
+                            className={`flex flex-col gap-4 rounded-2xl border p-4 shadow transition ${cardBorderClasses}`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                  {analysisType.name}
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  CÃ³digo: {analysisType.code}
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="text-[11px] uppercase tracking-[0.3em]">
+                                Pendiente
+                              </Badge>
+                            </div>
+
+                            <div className="space-y-3">
+                              {analysisType.options === "dual" && (
+                                <>
+                                  <FormField
+                                    label="Modo"
+                                    error={showModeError ? valueError : undefined}
+                                  >
+                                    <Select
+                                      value={form?.mode || ""}
+                                      onValueChange={(value) => {
+                                        updateFormData(analysisType.id, {
+                                          mode: value as "MNPC" | "numeric",
+                                        });
+                                        setFieldErrorMessage(
+                                          analysisType.id,
+                                          "value"
+                                        );
+                                      }}
+                                    >
+                                      <SelectTrigger className="h-11 w-full rounded-xl border border-slate-200 text-sm">
+                                        <SelectValue placeholder="Selecciona el modo" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="MNPC">MNPC</SelectItem>
+                                        <SelectItem value="numeric">NumÃ©rico</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormField>
+                                  {form?.mode === "numeric" && (
+                                    <FormField
+                                      label="Valor numÃ©rico"
+                                      error={showValueInputError ? valueError : undefined}
+                                    >
+                                      <Input
+                                        type="number"
+                                        className="h-11 rounded-xl border border-slate-200 text-sm"
+                                        placeholder="Ingrese el valor numÃ©rico"
+                                        value={form?.value || ""}
+                                        onChange={(e) => {
+                                          updateFormData(analysisType.id, {
+                                            value: e.target.value,
+                                          });
+                                          setFieldErrorMessage(
+                                            analysisType.id,
+                                            "value"
+                                          );
+                                        }}
+                                      />
+                                    </FormField>
+                                  )}
+                                </>
+                              )}
+
+                              {analysisType.options === "boolean" && (
+                                <FormField label="Resultado" error={valueError}>
+                                  <Select
+                                    value={form?.result || ""}
+                                    onValueChange={(value) => {
+                                      updateFormData(analysisType.id, {
+                                        result: value as "POSITIVO" | "NEGATIVO",
+                                      });
+                                      setFieldErrorMessage(
+                                        analysisType.id,
+                                        "value"
+                                      );
+                                    }}
+                                  >
+                                    <SelectTrigger className="h-11 w-full rounded-xl border border-slate-200 text-sm">
+                                      <SelectValue placeholder="Selecciona el resultado" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="POSITIVO">
+                                        POSITIVO
+                                      </SelectItem>
+                                      <SelectItem value="NEGATIVO">
+                                        NEGATIVO
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormField>
+                              )}
+
+                              {(analysisType.options === "otro" ||
+                                analysisType.options === "string") && (
+                                <FormField
+                                  label="Resultado"
+                                  error={showValueInputError ? valueError : undefined}
+                                >
+                                  <Input
+                                    type="text"
+                                    className="h-11 rounded-xl border border-slate-200 text-sm"
+                                    placeholder="Ingrese el valor"
+                                    value={form?.value || ""}
+                                    onChange={(e) => {
+                                      updateFormData(analysisType.id, {
+                                        value: e.target.value,
+                                      });
+                                      setFieldErrorMessage(
+                                        analysisType.id,
+                                        "value"
+                                      );
+                                    }}
+                                  />
+                                </FormField>
+                              )}
+
+                              {analysisType.options === "numeric" && (
+                                <FormField
+                                  label="Resultado"
+                                  error={showValueInputError ? valueError : undefined}
+                                >
+                                  <Input
+                                    type="number"
+                                    className="h-11 rounded-xl border border-slate-200 text-sm"
+                                    placeholder="Ingrese el valor numÃ©rico"
+                                    value={form?.value || ""}
+                                    onChange={(e) => {
+                                      updateFormData(analysisType.id, {
+                                        value: e.target.value,
+                                      });
+                                      setFieldErrorMessage(
+                                        analysisType.id,
+                                        "value"
+                                      );
+                                    }}
+                                  />
+                                </FormField>
+                              )}
+
+                              <FormField label="Fecha del anÃ¡lisis" error={dateError}>
+                                <Input
+                                  type="date"
+                                  className="h-11 rounded-xl border border-slate-200 text-sm"
+                                  value={form?.date || ""}
+                                  onChange={(e) => {
+                                    updateFormData(analysisType.id, {
+                                      date: e.target.value,
+                                    });
+                                    setFieldErrorMessage(
+                                      analysisType.id,
+                                      "date"
+                                    );
+                                  }}
+                                />
+                              </FormField>
+                            </div>
+
+                            <div className="flex justify-end">
+                              <Button
+                                size="sm"
+                                className="w-full rounded-full md:w-auto"
+                                onClick={() => handleSave(analysisType)}
+                                disabled={isSaveDisabled}
+                              >
+                                {saving.has(analysisType.id) ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Guardando...
+                                  </>
+                                ) : (
+                                  "Guardar"
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </section>
             </div>
-          </div>
-        )}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

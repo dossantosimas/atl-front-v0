@@ -355,7 +355,7 @@ export function MonthlyKpi({ qualityTypeId }: MonthlyKpiProps) {
                         const m = row.byDate[dk] || { nonCompliant: 0, total: 0, badPct: 0, ptsLost: 0, groupPtsLost: 0 };
                         return (
                           <React.Fragment key={`m-${row.groupName}-${row.typeId}-${dk}`}>
-                            <TableCell className={`text-center border-l ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>
+                            <TableCell className={`text-center border-l ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : m.nonCompliant !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>
                               {m.details && m.details.length > 0 ? (
                                 <TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help underline decoration-dotted text-red-600 font-bold">{m.nonCompliant.toFixed(0)}</span></TooltipTrigger>
                                 <TooltipContent className="p-3 space-y-2 max-w-[300px]"><p className="font-bold text-xs border-b pb-1 mb-1 uppercase">Detalles No Cumplimiento</p>
@@ -363,17 +363,17 @@ export function MonthlyKpi({ qualityTypeId }: MonthlyKpiProps) {
                                 </TooltipContent></Tooltip></TooltipProvider>
                               ) : m.nonCompliant.toFixed(0)}
                             </TableCell>
-                            <TableCell className={`text-center ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{m.total.toFixed(0)}</TableCell>
-                            <TableCell className={`text-center ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{m.badPct.toFixed(2)}%</TableCell>
-                            <TableCell className={`text-center ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{m.ptsLost.toFixed(2)}</TableCell>
+                            <TableCell className={`text-center ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : m.total !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{m.total.toFixed(0)}</TableCell>
+                            <TableCell className={`text-center ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : m.badPct !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{m.badPct.toFixed(2)}%</TableCell>
+                            <TableCell className={`text-center ${m.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : m.ptsLost !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{m.ptsLost.toFixed(2)}</TableCell>
                             {row.isFirstInGroup && <TableCell rowSpan={row.groupRowCount} className="text-center border-r bg-slate-100 dark:bg-slate-800 font-bold align-middle p-0">{m.groupPtsLost?.toFixed(2)}</TableCell>}
                           </React.Fragment>
                         );
                       })}
-                      <TableCell className={`text-center border-l bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{row.weekly.nonCompliant.toFixed(0)}</TableCell>
-                      <TableCell className={`text-center bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{row.weekly.total.toFixed(0)}</TableCell>
-                      <TableCell className={`text-center bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{row.weekly.badPct.toFixed(0)}</TableCell>
-                      <TableCell className={`text-center bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : ""}`}>{row.weekly.ptsLost.toFixed(2)}</TableCell>
+                      <TableCell className={`text-center border-l bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.nonCompliant !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{row.weekly.nonCompliant.toFixed(0)}</TableCell>
+                      <TableCell className={`text-center bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.total !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{row.weekly.total.toFixed(0)}</TableCell>
+                      <TableCell className={`text-center bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.badPct !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{row.weekly.badPct.toFixed(0)}</TableCell>
+                      <TableCell className={`text-center bg-slate-50/50 ${row.weekly.nonCompliant > 0 ? "bg-red-50 dark:bg-red-900/20" : row.weekly.ptsLost !== 0 ? "bg-slate-100 dark:bg-slate-800" : ""}`}>{row.weekly.ptsLost.toFixed(2)}</TableCell>
                       {row.isFirstInGroup && <TableCell rowSpan={row.groupRowCount} className="text-center border-r bg-slate-200 dark:bg-slate-700 font-bold align-middle p-0">{row.weekly.groupPtsLost?.toFixed(2)}</TableCell>}
                     </TableRow>
                   );

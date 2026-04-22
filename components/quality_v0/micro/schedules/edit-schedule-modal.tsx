@@ -20,6 +20,18 @@ import { useToast } from "@/components/toast";
 import { Loader2 } from "lucide-react";
 import { FrequencyConfigurator } from "./frequency-configurator";
 
+import { getQualityTypes } from "@/lib/services/quality-types.service";
+import { getAllDepartments } from "@/lib/services/departments.service";
+import type { QualityType } from "@/lib/types/quality-types";
+import type { Department } from "@/lib/types/departments";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface EditScheduleModalProps {
   schedule: MicroSchedule | null;
   open: boolean;
@@ -34,6 +46,8 @@ export function EditScheduleModal({
   onScheduleUpdated,
 }: EditScheduleModalProps) {
   const [name, setName] = useState("");
+  const [qualityTypeId, setQualityTypeId] = useState<string>("");
+  const [departmentId, setDepartmentId] = useState<string>("");
   const [eventTypeId, setEventTypeId] = useState<string>("");
   const [frequency, setFrequency] = useState("");
   const [description, setDescription] = useState("");
@@ -41,6 +55,8 @@ export function EditScheduleModal({
   const [timezone, setTimezone] = useState("America/Bogota");
   const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [elements, setElements] = useState<MicroElement[]>([]);
+  const [qualityTypes, setQualityTypes] = useState<QualityType[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const { showSuccess, showError } = useToast();
@@ -48,6 +64,8 @@ export function EditScheduleModal({
   useEffect(() => {
     if (open && schedule) {
       setName(schedule.name || "");
+      setQualityTypeId(schedule.eventType?.qualityTypeId?.toString() || "");
+      setDepartmentId(schedule.eventType?.departmentId?.toString() || "");
       setEventTypeId(schedule.eventType?.id || "");
       setFrequency(schedule.frequency || "");
       setDescription(schedule.description || "");
@@ -60,8 +78,22 @@ export function EditScheduleModal({
       } else {
         setSelectedElementIds([]);
       }
+      loadInitialData();
     }
   }, [open, schedule]);
+
+  const loadInitialData = async () => {
+    try {
+      const [qtData, deptData] = await Promise.all([
+        getQualityTypes(),
+        getAllDepartments()
+      ]);
+      setQualityTypes(qtData);
+      setDepartments(deptData);
+    } catch (error) {
+      console.error("Error loading initial data:", error);
+    }
+  };
 
   useEffect(() => {
     if (open && eventTypeId) {
@@ -70,6 +102,9 @@ export function EditScheduleModal({
       setElements([]);
     }
   }, [open, eventTypeId]);
+
+  // Resetear eventTypeId cuando cambie qualityTypeId o departmentId (solo si es interacción del usuario)
+  // No lo ponemos en un useEffect simple para evitar que se resetee al cargar el modal de edición
 
   const loadElements = async () => {
     if (!eventTypeId) return;
@@ -145,6 +180,56 @@ export function EditScheduleModal({
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2 block">
+                Tipo de Calidad *
+              </label>
+              <Select
+                value={qualityTypeId}
+                onValueChange={(val) => {
+                  setQualityTypeId(val);
+                  setEventTypeId(""); // Resetear tipo de evento al cambiar calidad
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona calidad" />
+                </SelectTrigger>
+                <SelectContent>
+                  {qualityTypes.map((qt) => (
+                    <SelectItem key={qt.id} value={qt.id.toString()}>
+                      {qt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2 block">
+                Departamento *
+              </label>
+              <Select
+                value={departmentId}
+                onValueChange={(val) => {
+                  setDepartmentId(val);
+                  setEventTypeId(""); // Resetear tipo de evento al cambiar departamento
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona departamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div>
             <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2 block">
               Tipo de Evento *
@@ -152,7 +237,9 @@ export function EditScheduleModal({
             <MicroTypeSelector
               value={eventTypeId}
               onValueChange={setEventTypeId}
-              placeholder="Selecciona un tipo de evento"
+              placeholder={qualityTypeId && departmentId ? "Selecciona tipo" : "Primero elige calidad y departamento"}
+              qualityTypeId={qualityTypeId ? parseInt(qualityTypeId, 10) : undefined}
+              departmentId={departmentId ? parseInt(departmentId, 10) : undefined}
             />
           </div>
 
