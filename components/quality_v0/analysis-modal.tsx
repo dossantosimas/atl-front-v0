@@ -125,7 +125,9 @@ const formatAnalysisDate = (dateString?: string) => {
     return "-";
   }
   try {
-    return new Date(dateString).toLocaleString("es-ES", {
+    const date = new Date(dateString);
+    date.setHours(date.getHours() + 5);
+    return date.toLocaleString("es-ES", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -260,7 +262,7 @@ export function AnalysisModal({
         name: analysisType.name,
         code: analysisType.code,
         threshold: analysisType.threshold || null,
-        date: form.date,
+        date: `${form.date}T12:00:00.000Z`,
       };
 
       await createMicroAnalysis(payload);
@@ -452,7 +454,9 @@ export function AnalysisModal({
                   const formatDate = (dateString?: string) => {
                     if (!dateString) return "-";
                     try {
-                      return new Date(dateString).toLocaleString("es-ES", {
+                      const date = new Date(dateString);
+                      date.setHours(date.getHours() + 5);
+                      return date.toLocaleString("es-ES", {
                         year: "numeric",
                         month: "2-digit",
                         day: "2-digit",
